@@ -8,10 +8,21 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+tests/**/.auth/
+/tests/e2e/.auth/
 
 # next.js
 /.next/
+/.next*
 /out/
+
+# generated PWA assets
+/public/sw.js
+/public/workbox-*.js
+/public/worker-*.js
+/public/fallback-*.js
 
 # production
 /build
@@ -26,7 +37,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
+.env.sentry-build-plugin
 
 # vercel
 .vercel
@@ -34,3 +48,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/lib/generated/prisma

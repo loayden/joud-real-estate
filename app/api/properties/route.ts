@@ -18,6 +18,11 @@ import {
   propertySubmitSchema,
 } from "@/lib/validations/property";
 import { sanitizePropertyInput } from "@/lib/sanitize";
+import {
+  checkIdempotency,
+  parseIdempotencyKey,
+  storeIdempotency,
+} from "@/lib/idempotency";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -93,6 +98,15 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await requireSession();
+    const idempotencyKey = parseIdempotencyKey(req);
+
+    if (idempotencyKey) {
+      const replay = await checkIdempotency(session.user.id, idempotencyKey);
+      if (replay) {
+        return apiSuccess(replay.body, replay.statusCode);
+      }
+    }
+
     const body = await req.json();
     const parsed = propertyCreateSchema.safeParse(body);
 
@@ -161,14 +175,25 @@ export async function POST(req: NextRequest) {
 
       const property = await findPropertyDetailById(created.id);
 
-      return apiSuccess(
-        {
-          id: created.id,
-          slug: created.slug,
-          property: property ? serializeProperty(property) : null,
-        },
-        201,
-      );
+      const responseBody = {
+        id: created.id,
+        slug: created.slug,
+        property: property ? serializeProperty(property) : null,
+      };
+
+      if (idempotencyKey) {
+        const winner = await storeIdempotency(
+          session.user.id,
+          idempotencyKey,
+          201,
+          responseBody,
+        );
+        if (winner) {
+          return apiSuccess(winner.body, winner.statusCode);
+        }
+      }
+
+      return apiSuccess(responseBody, 201);
     }
 
     const draftInput = {
@@ -231,14 +256,25 @@ export async function POST(req: NextRequest) {
 
     const property = await findPropertyDetailById(created.id);
 
-    return apiSuccess(
-      {
-        id: created.id,
-        slug: created.slug,
-        property: property ? serializeProperty(property) : null,
-      },
-      201,
-    );
+    const draftResponseBody = {
+      id: created.id,
+      slug: created.slug,
+      property: property ? serializeProperty(property) : null,
+    };
+
+    if (idempotencyKey) {
+      const winner = await storeIdempotency(
+        session.user.id,
+        idempotencyKey,
+        201,
+        draftResponseBody,
+      );
+      if (winner) {
+        return apiSuccess(winner.body, winner.statusCode);
+      }
+    }
+
+    return apiSuccess(draftResponseBody, 201);
   } catch (error) {
     return handleApiError(error);
   }

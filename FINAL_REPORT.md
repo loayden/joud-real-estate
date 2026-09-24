@@ -3,9 +3,9 @@
 **Date:** 2026-09-24 · **Branch:** `stabilize` · **Mode:** read-only audit → autonomous fix loop (dev DB `joud_dev` only, fake data, no prod secrets touched)
 **Definition of done:** clean production build, zero console errors on core flows, all three personas complete their journeys, no open critical/high issues.
 
-## Verdict: NOT YET LAUNCHABLE — 2 medium issues open, launch blockers in env
+## Verdict: READY FOR STAGING — 0 open issues, env blockers remain
 
-All critical/high issues found during this pass are fixed and verified. Remaining open items are 2 medium post-launch tunes (no idempotency key, dev page-weight) plus environment blockers (real Redis/R2/mail/captcha keys, Moyasar absent). Ship to **staging** once env blockers clear; production after a beta with real agents.
+All 13 issues found across this pass are fixed and verified (11 verified during the pass + ISSUE-006 idempotency and ISSUE-010 page-weight closed post-report). Remaining work is environment credentials (real Redis/R2/mail/captcha keys, Moyasar absent) + production re-measurement. Ship to **staging** once env blockers clear; production after a beta with real agents.
 
 ---
 
@@ -30,8 +30,8 @@ All critical/high issues found during this pass are fixed and verified. Remainin
 - **ISSUE-003 — `/api/auth/me` 401 for guests → console.error every page load.** Fixed: 200 `{success:true,data:null}`. Verified.
 - **ISSUE-008 — in-memory rate-limit fallback in prod.** Fixed: fail fast in production without Upstash creds. Verified (`tsc`, suites, build).
 - **ISSUE-009 — missing composite property indexes.** Fixed: 3 indexes + migration `20260924194837_add_property_composite_indexes`. Verified (`pg_indexes`, `prisma validate`).
-- **ISSUE-006 — OPEN: no idempotency on `POST /api/properties`.** Double-submit creates duplicates. Mitigated by UI disable-while-pending. Recommended: `Idempotency-Key` header + 24h store. Post-launch.
-- **ISSUE-010 — OPEN: dev page weight 17–23MB (Pexels placeholder upscaling).** Production uses R2 + AVIF/WebP; JS bundle healthy (164kB shared). Recommended: cap placeholder proxy at 1200w; re-measure in prod. Post-launch tune.
+- **ISSUE-006 — CLOSED: `Idempotency-Key` on `POST /api/properties`.** DB-backed `idempotency_keys` table + migration, 24h TTL, race-safe replay. Playwright test: same key → same id/slug, different key → new row, bad key → ignored.
+- **ISSUE-010 — CLOSED: page weight.** Dev 17MB proven to be unminified dev JS (largest image 114KB). Placeholder proxy capped (WebP ≤1200w + timeouts). **Production (`next start`) measured: home 1065ms/LCP 372ms/1.6MB, search 800ms/88ms/1.3MB, detail 1124ms/100ms/1.7MB.**
 
 ### Refuted audit claims (verified, no change needed)
 
@@ -82,7 +82,7 @@ npm run type-check && npm run lint && npm run build
 ## 8. Final verification evidence (2026-09-24)
 
 - `tsc --noEmit`: exit 0. `next lint`: exit 0 (1 known warning: StepLocation exhaustive-deps). `next build`: compiled + 164kB shared JS.
-- Playwright (chromium, workers=1, suites run per-file): phase-1 13/13, phase-2 7/7, phase-3 3/3, core-flows 25/25 — **48/48 green**, zero console errors on core flows. Note: running all four files back-to-back in one process occasionally flakes in dev (auth 5/min/IP budget shared across suites; dev compile latency on first-visit admin pages; Turbopack dev-server contention) — reruns per-file are consistently green. CI should run against `next start` (production build), where first-visit compile cost disappears.
+- Playwright (chromium, workers=1, suites run per-file with cooldowns): phase-1 13/13, phase-2 8/8 (incl. new idempotency test), phase-3 3/3, core-flows 25/25 — **49/49 green**, zero console errors on core flows. Note: back-to-back full runs in dev occasionally flake (auth 5/min/IP budget; first-visit admin compile latency; dev-server contention) — per-file reruns consistently green. CI should run against `next start` (production build).
 - Personas: guest (anonymous), `qa-user@joud.test` (USER), `admin@joud.sa` (SUPER_ADMIN) — all journeys completed.
-- DB: 20 active Egyptian regions, 92 cities, 8 approved properties, 0 orphans; Saudi data archived to `archived_*` tables.
-- Open issues: 2 medium (ISSUE-006 idempotency, ISSUE-010 page weight) — both post-launch, mitigations documented.
+- DB: 20 active Egyptian regions, 92 cities, 8 approved properties, 0 orphans; Saudi data archived to `archived_*` tables; `idempotency_keys` table + 2 migrations this pass.
+- Open issues: **none**. ISSUE-006 and ISSUE-010 closed with tests + production measurements above.

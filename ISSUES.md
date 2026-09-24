@@ -35,16 +35,17 @@
 - Steps: send two identical `POST /api/properties` concurrently as qa-user → both return 201 with different IDs.
 - Root cause: no `Idempotency-Key` handling; uniqueness only on slug (generated, so never collides).
 - Mitigation in place: UI disables submit while pending (`isSubmitting`).
-- Fix (recommended): accept optional `Idempotency-Key` header, store key per user with 24h TTL, return original response on replay. Post-launch.
-- Status: open.
+- Fix: optional `Idempotency-Key` header (8–64 chars `[A-Za-z0-9_-]`), DB-backed `idempotency_keys` table (`@@unique([userId, key])`, 24h TTL, Cascade on user delete) + migration; replay returns original 201 body; concurrent race converges via unique-violation re-read; invalid keys ignored.
+- Evidence: new Playwright test (same key → same id/slug; different key → new row; bad key → creates anew); `tsc` clean; migration deployed + `prisma generate`.
+- Gotcha found while verifying: running dev server holds the pre-`prisma generate` client in memory (`prisma.idempotencyKey` undefined → 500); restart dev after client regeneration.
+- Status: VERIFIED.
 
-### ISSUE-010 — medium — perf — page weight 17–23MB in dev, mostly oversized Pexels placeholder variants
+### ISSUE-010 — medium — perf — page weight 17–23MB in dev — VERIFIED (dev artifact + defense capped)
 
-- Evidence: transfer-weight probe (dev): home 17MB/LCP 696ms, search 18MB/LCP 2436ms, detail 23MB/LCP 1220ms; `/_next/image?...placeholder...&w=3840` upscales the local placeholder proxy.
-- Root cause: demo properties have no real images → every card hits `/api/pexels/placeholder`, Next Image generates up to 3840w variants.
-- Why not a blocker: production listings use R2 uploads + Next AVIF/WebP; Pexels sources capped w=1200/1600; JS bundle healthy (164kB shared).
-- Fix (recommended): cap placeholder proxy width (max 1200w); re-measure in production.
-- Status: open (post-launch tune).
+- Evidence: transfer probe showed home 17MB in dev; top responses were **unminified dev JS** (`main-app.js` 10.7MB, `layout.js` 2MB, `page.js` 1.6MB) — largest image only 114KB. Production build reports 164kB shared JS. The "oversized placeholder" theory was wrong; the weight was dev-mode bundles.
+- Fix: placeholder proxy now caps output (WebP, max 1200w, `?w=` clamp 16–1200), 10s upstream fetch timeout + 15s Sharp timeout with untouched-proxy fallback. Verified: default 237KB webp, `w=400` → 26KB, `w=5000` → clamped to 1200.
+- Follow-up DONE: measured against `next start` (production build): home load 1065ms/LCP 372ms/1.6MB, search 800ms/88ms/1.3MB, detail 1124ms/100ms/1.7MB. All within budget.
+- Status: VERIFIED.
 
 ---
 

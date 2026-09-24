@@ -181,6 +181,61 @@ test.describe("Phase 2 - listing CRUD matrix (API)", () => {
     await ctx.close();
   });
 
+  test("idempotency-key: same key replays original, different keys create anew", async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({ storageState: QA_STATE });
+    const req = ctx.request;
+    const csrfRes = await req.get(`${BASE}/api/csrf`);
+    const csrfBody = await csrfRes.json();
+    const base = { "Content-Type": "application/json" };
+    const payload = basePayload(`مفتاح عدم تكرار ${Date.now()}`);
+    const key = `qa-key-${Date.now()}`;
+    const h = { ...base, "x-csrf-token": csrfBody.data.token };
+    const withKey = (k: string) => ({
+      ...base,
+      "x-csrf-token": csrfBody.data.token,
+      "idempotency-key": k,
+    });
+
+    const r1 = await req.post(`${BASE}/api/properties`, {
+      headers: withKey(key),
+      data: payload,
+    });
+    expect(r1.status()).toBe(201);
+    const j1 = await r1.json();
+    const r2 = await req.post(`${BASE}/api/properties`, {
+      headers: withKey(key),
+      data: payload,
+    });
+    expect(r2.status()).toBe(201);
+    const j2 = await r2.json();
+    expect(j2.data.id).toBe(j1.data.id);
+    expect(j2.data.slug).toBe(j1.data.slug);
+
+    // different key → new property
+    const r3 = await req.post(`${BASE}/api/properties`, {
+      headers: withKey(`${key}-other`),
+      data: payload,
+    });
+    expect(r3.status()).toBe(201);
+    const j3 = await r3.json();
+    expect(j3.data.id).not.toBe(j1.data.id);
+
+    // invalid key format → ignored, creates anew
+    const r4 = await req.post(`${BASE}/api/properties`, {
+      headers: { ...h, "idempotency-key": "!!!bad key!!!" },
+      data: payload,
+    });
+    expect(r4.status()).toBe(201);
+
+    // cleanup (replayed id never created a second row)
+    for (const did of [j1.data.id, j3.data.id, (await r4.json()).data.id]) {
+      await req.delete(`${BASE}/api/properties/${did}`, { headers: h });
+    }
+    await ctx.close();
+  });
+
   test("edit + favorite + inquiry + report + double-submit", async ({
     browser,
   }) => {

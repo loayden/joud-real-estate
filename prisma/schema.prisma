@@ -1,0 +1,584 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_DATABASE_URL")
+  extensions = [pg_trgm, unaccent, uuid_ossp(map: "uuid-ossp")]
+}
+
+enum UserRole {
+  USER
+  AGENT
+  ADMIN
+  SUPER_ADMIN
+
+  @@map("user_role")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+  PENDING_VERIFICATION
+
+  @@map("user_status")
+}
+
+enum ListingType {
+  SALE
+  RENT
+
+  @@map("listing_type")
+}
+
+enum PropertyStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  SOLD
+  RENTED
+  ARCHIVED
+
+  @@map("property_status")
+}
+
+enum InquiryStatus {
+  NEW
+  READ
+  REPLIED
+  CLOSED
+
+  @@map("inquiry_status")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+
+  @@map("review_status")
+}
+
+enum ReportReason {
+  FAKE_LISTING
+  DUPLICATE
+  WRONG_PRICE
+  WRONG_LOCATION
+  INAPPROPRIATE
+  SOLD_NOT_UPDATED
+  OTHER
+
+  @@map("report_reason")
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+
+  @@map("report_status")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique @db.VarChar(255)
+  emailVerified      DateTime?           @map("email_verified")
+  phone              String?             @unique @db.VarChar(20)
+  passwordHash       String              @map("password_hash")
+  role               UserRole            @default(USER)
+  status             UserStatus          @default(PENDING_VERIFICATION)
+  failedLoginCount   Int                 @default(0) @map("failed_login_count")
+  lockedUntil        DateTime?           @map("locked_until")
+  lastLoginAt        DateTime?           @map("last_login_at")
+  lastLoginIp        String?             @map("last_login_ip") @db.VarChar(45)
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  profile            UserProfile?
+  properties         Property[]
+  favorites          Favorite[]
+  sentInquiries      Inquiry[]           @relation("InquirySender")
+  sessions           UserSession[]
+  verificationTokens VerificationToken[]
+  savedSearches      SavedSearch[]
+  auditLogs          AuditLog[]          @relation("AuditActor")
+  pushSubscriptions  PushSubscription[]
+  sellerScore        Float?              @map("seller_score") @db.DoublePrecision
+  sellerRatingCount  Int                 @default(0) @map("seller_rating_count")
+  priceAlerts        PriceAlert[]
+  ratings            PropertyRating[]
+  reportsFiled       PropertyReport[]    @relation("ReporterUser")
+  helpfulVotes       ReviewHelpfulVote[]
+
+  @@index([email])
+  @@index([status])
+  @@index([role])
+  @@map("users")
+}
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName       String   @map("first_name") @db.VarChar(100)
+  lastName        String   @map("last_name") @db.VarChar(100)
+  avatarUrl       String?  @map("avatar_url") @db.VarChar(500)
+  avatarKey       String?  @map("avatar_key") @db.VarChar(500)
+  bio             String?  @db.Text
+  whatsapp        String?  @db.VarChar(20)
+  preferredLocale String   @default("ar") @map("preferred_locale") @db.VarChar(5)
+  cityId          String?  @map("city_id")
+  city            City?    @relation(fields: [cityId], references: [id])
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("user_profiles")
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at")
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([token])
+  @@map("user_sessions")
+}
+
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique @db.VarChar(255)
+  type      String    @db.VarChar(50)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([token])
+  @@map("verification_tokens")
+}
+
+model Region {
+  id         String     @id @default(cuid())
+  nameAr     String     @map("name_ar") @db.VarChar(100)
+  nameEn     String     @map("name_en") @db.VarChar(100)
+  slug       String     @unique @db.VarChar(100)
+  code       String?    @db.VarChar(10)
+  isActive   Boolean    @default(true) @map("is_active")
+  sortOrder  Int        @default(0) @map("sort_order")
+  cities     City[]
+  properties Property[]
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  @@index([slug])
+  @@map("regions")
+}
+
+model City {
+  id            String         @id @default(cuid())
+  regionId      String         @map("region_id")
+  region        Region         @relation(fields: [regionId], references: [id])
+  nameAr        String         @map("name_ar") @db.VarChar(100)
+  nameEn        String         @map("name_en") @db.VarChar(100)
+  slug          String         @unique @db.VarChar(100)
+  latitude      Decimal?       @db.Decimal(10, 7)
+  longitude     Decimal?       @db.Decimal(10, 7)
+  isActive      Boolean        @default(true) @map("is_active")
+  sortOrder     Int            @default(0) @map("sort_order")
+  neighborhoods Neighborhood[]
+  properties    Property[]
+  userProfiles  UserProfile[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@index([regionId])
+  @@index([slug])
+  @@map("cities")
+}
+
+model Neighborhood {
+  id         String     @id @default(cuid())
+  cityId     String     @map("city_id")
+  city       City       @relation(fields: [cityId], references: [id])
+  nameAr     String     @map("name_ar") @db.VarChar(100)
+  nameEn     String     @map("name_en") @db.VarChar(100)
+  slug       String     @unique @db.VarChar(100)
+  isActive   Boolean    @default(true) @map("is_active")
+  properties Property[]
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+
+  @@index([cityId])
+  @@map("neighborhoods")
+}
+
+model PropertyCategory {
+  id         String         @id @default(cuid())
+  nameAr     String         @map("name_ar") @db.VarChar(100)
+  nameEn     String         @map("name_en") @db.VarChar(100)
+  slug       String         @unique @db.VarChar(100)
+  iconName   String?        @map("icon_name") @db.VarChar(50)
+  imageUrl   String?        @map("image_url") @db.VarChar(500)
+  isActive   Boolean        @default(true) @map("is_active")
+  sortOrder  Int            @default(0) @map("sort_order")
+  types      PropertyType[]
+  properties Property[]
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  @@map("property_categories")
+}
+
+model PropertyType {
+  id         String           @id @default(cuid())
+  categoryId String           @map("category_id")
+  category   PropertyCategory @relation(fields: [categoryId], references: [id])
+  nameAr     String           @map("name_ar") @db.VarChar(100)
+  nameEn     String           @map("name_en") @db.VarChar(100)
+  slug       String           @unique @db.VarChar(100)
+  isActive   Boolean          @default(true) @map("is_active")
+  sortOrder  Int              @default(0) @map("sort_order")
+  properties Property[]
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  @@index([categoryId])
+  @@map("property_types")
+}
+
+model Amenity {
+  id         String            @id @default(cuid())
+  nameAr     String            @map("name_ar") @db.VarChar(100)
+  nameEn     String            @map("name_en") @db.VarChar(100)
+  iconName   String?           @map("icon_name") @db.VarChar(50)
+  category   String?           @db.VarChar(50)
+  sortOrder  Int               @default(0) @map("sort_order")
+  properties PropertyAmenity[]
+
+  @@unique([nameAr, category])
+  @@map("amenities")
+}
+
+model Property {
+  id              String                   @id @default(cuid())
+  slug            String                   @unique @db.VarChar(300)
+  userId          String                   @map("user_id")
+  user            User                     @relation(fields: [userId], references: [id])
+  regionId        String                   @map("region_id")
+  region          Region                   @relation(fields: [regionId], references: [id])
+  cityId          String                   @map("city_id")
+  city            City                     @relation(fields: [cityId], references: [id])
+  neighborhoodId  String?                  @map("neighborhood_id")
+  neighborhood    Neighborhood?            @relation(fields: [neighborhoodId], references: [id])
+  categoryId      String                   @map("category_id")
+  category        PropertyCategory         @relation(fields: [categoryId], references: [id])
+  typeId          String                   @map("type_id")
+  type            PropertyType             @relation(fields: [typeId], references: [id])
+  titleAr         String                   @map("title_ar") @db.VarChar(300)
+  titleEn         String?                  @map("title_en") @db.VarChar(300)
+  descriptionAr   String                   @map("description_ar") @db.Text
+  descriptionEn   String?                  @map("description_en") @db.Text
+  listingType     ListingType              @map("listing_type")
+  price           Decimal                  @db.Decimal(14, 2)
+  currency        String                   @default("EGP") @db.VarChar(3)
+  priceNegotiable Boolean                  @default(false) @map("price_negotiable")
+  area            Decimal                  @db.Decimal(10, 2)
+  areaUnit        String                   @default("sqm") @map("area_unit") @db.VarChar(10)
+  bedrooms        Int?                     @db.SmallInt
+  bathrooms       Int?                     @db.SmallInt
+  floors          Int?                     @db.SmallInt
+  parkingSpaces   Int?                     @map("parking_spaces") @db.SmallInt
+  yearBuilt       Int?                     @map("year_built") @db.SmallInt
+  streetWidth     Decimal?                 @map("street_width") @db.Decimal(6, 2)
+  latitude        Decimal?                 @db.Decimal(10, 7)
+  longitude       Decimal?                 @db.Decimal(10, 7)
+  address         String?                  @db.VarChar(500)
+  street          String?                  @db.VarChar(200)
+  buildingNumber  String?                  @map("building_number") @db.VarChar(20)
+  apartmentNumber String?                  @map("apartment_number") @db.VarChar(20)
+  floorNumber     Int?                     @map("floor_number") @db.SmallInt
+  status          PropertyStatus           @default(DRAFT)
+  isFeatured      Boolean                  @default(false) @map("is_featured")
+  featuredUntil   DateTime?                @map("featured_until")
+  viewCount       Int                      @default(0) @map("view_count")
+  inquiryCount    Int                      @default(0) @map("inquiry_count")
+  favoriteCount   Int                      @default(0) @map("favorite_count")
+  publishedAt     DateTime?                @map("published_at")
+  expiresAt       DateTime?                @map("expires_at")
+  approvedAt      DateTime?                @map("approved_at")
+  approvedBy      String?                  @map("approved_by")
+  rejectionReason String?                  @map("rejection_reason") @db.Text
+  avgRating       Float?                   @map("avg_rating") @db.DoublePrecision
+  ratingCount     Int                      @default(0) @map("rating_count")
+  virtualTourUrl  String?                  @map("virtual_tour_url") @db.VarChar(500)
+  tour360ImageUrls Json?                   @map("tour_360_image_urls")
+  searchVector    Unsupported("tsvector")? @default(dbgenerated("((setweight(to_tsvector('arabic'::regconfig, (COALESCE(title_ar, ''::character varying))::text), 'A'::\"char\") || setweight(to_tsvector('arabic'::regconfig, COALESCE(description_ar, ''::text)), 'B'::\"char\")) || setweight(to_tsvector('simple'::regconfig, (COALESCE(title_en, ''::character varying))::text), 'C'::\"char\"))")) @map("search_vector")
+  images          PropertyImage[]
+  amenities       PropertyAmenity[]
+  favorites       Favorite[]
+  inquiries       Inquiry[]
+  priceAlerts     PriceAlert[]
+  ratings         PropertyRating[]
+  reports         PropertyReport[]
+  priceHistory    PropertyPriceHistory[]
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([regionId])
+  @@index([cityId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([listingType])
+  @@index([price])
+  @@index([isFeatured])
+  @@index([publishedAt])
+  @@index([status, listingType, cityId])
+  @@index([status, isFeatured, publishedAt])
+  @@index([userId, status])
+  @@index([searchVector], map: "idx_properties_fts", type: Gin)
+  @@index([titleAr(ops: raw("gin_trgm_ops"))], map: "idx_properties_trgm", type: Gin)
+  @@map("properties")
+}
+
+model PropertyImage {
+  id           String   @id @default(cuid())
+  propertyId   String   @map("property_id")
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  storageKey   String   @map("storage_key") @db.VarChar(500)
+  url          String   @db.VarChar(500)
+  thumbnailKey String?  @map("thumbnail_key") @db.VarChar(500)
+  thumbnailUrl String?  @map("thumbnail_url") @db.VarChar(500)
+  mediaType    String   @default("image") @map("media_type") @db.VarChar(10)
+  width        Int?
+  height       Int?
+  sizeBytes    Int?     @map("size_bytes")
+  sortOrder    Int      @default(0) @map("sort_order")
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([propertyId])
+  @@index([isPrimary])
+  @@map("property_images")
+}
+
+model PropertyAmenity {
+  propertyId String   @map("property_id")
+  amenityId  String   @map("amenity_id")
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  amenity    Amenity  @relation(fields: [amenityId], references: [id])
+
+  @@id([propertyId, amenityId])
+  @@map("property_amenities")
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  propertyId String   @map("property_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model SavedSearch {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nameAr       String?  @map("name_ar") @db.VarChar(200)
+  filters      Json
+  alertEnabled Boolean  @default(false) @map("alert_enabled")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("saved_searches")
+}
+
+model Inquiry {
+  id          String        @id @default(cuid())
+  propertyId  String        @map("property_id")
+  property    Property      @relation(fields: [propertyId], references: [id])
+  senderId    String?       @map("sender_id")
+  sender      User?         @relation("InquirySender", fields: [senderId], references: [id])
+  ownerUserId String        @map("owner_user_id")
+  guestName   String?       @map("guest_name") @db.VarChar(100)
+  guestEmail  String?       @map("guest_email") @db.VarChar(255)
+  guestPhone  String?       @map("guest_phone") @db.VarChar(20)
+  message     String        @db.Text
+  status      InquiryStatus @default(NEW)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([propertyId])
+  @@index([ownerUserId])
+  @@map("inquiries")
+}
+
+model ContentPage {
+  id          String   @id @default(cuid())
+  slug        String   @unique @db.VarChar(100)
+  titleAr     String   @map("title_ar") @db.VarChar(300)
+  titleEn     String   @map("title_en") @db.VarChar(300)
+  contentAr   String   @map("content_ar") @db.Text
+  contentEn   String   @map("content_en") @db.Text
+  metaDescAr  String?  @map("meta_desc_ar") @db.VarChar(500)
+  metaDescEn  String?  @map("meta_desc_en") @db.VarChar(500)
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("content_pages")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?  @map("actor_id")
+  actor     User?    @relation("AuditActor", fields: [actorId], references: [id])
+  action    String   @db.VarChar(100)
+  entity    String   @db.VarChar(100)
+  entityId  String?  @map("entity_id") @db.VarChar(100)
+  oldValues Json?    @map("old_values")
+  newValues Json?    @map("new_values")
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([actorId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique @db.VarChar(100)
+  isEnabled   Boolean  @default(false) @map("is_enabled")
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique @db.VarChar(500)
+  p256dh    String   @db.VarChar(200)
+  auth      String   @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+model PropertyRating {
+  id             String              @id @default(cuid())
+  propertyId     String              @map("property_id")
+  property       Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId         String              @map("user_id")
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  overallScore   Int                 @map("overall_score") @db.SmallInt
+  accuracyScore  Int?                @map("accuracy_score") @db.SmallInt
+  valueScore     Int?                @map("value_score") @db.SmallInt
+  locationScore  Int?                @map("location_score") @db.SmallInt
+  commScore      Int?                @map("comm_score") @db.SmallInt
+  reviewTitle    String?             @map("review_title") @db.VarChar(200)
+  reviewBody     String?             @map("review_body") @db.Text
+  ownerResponse  String?             @map("owner_response") @db.Text
+  isApproved     Boolean             @default(false) @map("is_approved")
+  helpfulCount   Int                 @default(0) @map("helpful_count")
+  status         ReviewStatus        @default(PENDING)
+  helpfulVotes   ReviewHelpfulVote[]
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  @@unique([propertyId, userId])
+  @@index([propertyId])
+  @@index([userId])
+  @@index([status])
+  @@map("property_ratings")
+}
+
+model ReviewHelpfulVote {
+  id        String         @id @default(cuid())
+  ratingId  String         @map("rating_id")
+  userId    String         @map("user_id")
+  isHelpful Boolean        @map("is_helpful")
+  rating    PropertyRating @relation(fields: [ratingId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ratingId, userId])
+  @@index([userId])
+  @@map("review_helpful_votes")
+}
+
+model PriceAlert {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  propertyId    String   @map("property_id")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property      Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  targetPrice   Decimal? @map("target_price") @db.Decimal(14, 2)
+  lastPriceSeen Decimal  @map("last_price_seen") @db.Decimal(14, 2)
+  isActive      Boolean  @default(true) @map("is_active")
+  lastAlertAt   DateTime? @map("last_alert_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, propertyId])
+  @@index([propertyId])
+  @@index([isActive])
+  @@map("price_alerts")
+}
+
+model PropertyReport {
+  id         String       @id @default(cuid())
+  propertyId String       @map("property_id")
+  reporterId String       @map("reporter_id")
+  property   Property     @relation(fields: [propertyId], references: [id])
+  reporter   User         @relation("ReporterUser", fields: [reporterId], references: [id])
+  reason     ReportReason
+  details    String?      @db.Text
+  status     ReportStatus @default(OPEN)
+  resolvedBy String?      @map("resolved_by")
+  resolvedAt DateTime?    @map("resolved_at")
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@index([propertyId])
+  @@index([reporterId])
+  @@index([status])
+  @@map("property_reports")
+}
+
+model PropertyPriceHistory {
+  id         String   @id @default(cuid())
+  propertyId String   @map("property_id")
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  price      Decimal  @db.Decimal(14, 2)
+  changedBy  String?  @map("changed_by")
+  note       String?  @db.VarChar(200)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([propertyId])
+  @@index([createdAt])
+  @@map("property_price_history")
+}

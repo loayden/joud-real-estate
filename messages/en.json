@@ -1,0 +1,102 @@
+{
+  "site": {
+    "name": "Joud Real Estate",
+    "tagline": "A trusted Egyptian platform for discovering real estate in Cairo, Egypt.",
+    "comingSoon": "Coming Soon",
+    "comingSoonDescription": "We are building a modern real estate experience that starts in Cairo before expanding across Egypt.",
+    "primaryCta": "Browse Properties",
+    "secondaryCta": "List Your Property",
+    "trustLabel": "Verified listings, fast search, Arabic-first experience",
+    "copyright": "All rights reserved."
+  },
+  "nav": {
+    "home": "Home",
+    "properties": "Properties",
+    "search": "Search",
+    "agents": "Agents",
+    "compounds": "Compounds",
+    "about": "About",
+    "contact": "Contact",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "login": "Login",
+    "register": "Register",
+    "menu": "Menu"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "filter": "Filter",
+    "submit": "Submit",
+    "loading": "Loading",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "open": "Open",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "language": "Language"
+  },
+  "property": {
+    "sale": "For Sale",
+    "rent": "For Rent",
+    "price": "Price",
+    "area": "Area",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "location": "Location",
+    "description": "Description",
+    "contactOwner": "Contact Owner",
+    "featured": "Featured",
+    "latest": "Latest Properties",
+    "category": "Category",
+    "type": "Type"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phone": "Phone",
+    "loginTitle": "Login",
+    "registerTitle": "Create Account",
+    "forgotPassword": "Forgot password?"
+  },
+  "about": {
+    "title": "About Joud Real Estate",
+    "description": "Learn about Joud Real Estate, a trusted Egyptian platform for discovering properties in Cairo, Egypt.",
+    "mission": "Our Mission",
+    "missionText": "We aim to simplify property discovery in Egypt by providing a trusted, Arabic-first platform that connects buyers, renters, and sellers in Cairo and across Egypt.",
+    "values": "Why Choose Us",
+    "value1Title": "Verified Listings",
+    "value1Text": "Every listing is reviewed before going live, ensuring accurate and trustworthy property information.",
+    "value2Title": "Local Focus",
+    "value2Text": "Built specifically for the Egyptian market with deep local knowledge.",
+    "value3Title": "Arabic First",
+    "value3Text": "A fully bilingual experience with Arabic as the default, designed for Egyptian users."
+  },
+  "contact": {
+    "title": "Contact Us",
+    "description": "Have questions or need assistance? We are here to help.",
+    "email": "Email Us",
+    "emailAddress": "info@joud.sa",
+    "phone": "Call Us",
+    "phoneNumber": "+20 XX XXX XXXX",
+    "hours": "Business Hours",
+    "hoursDetail": "Sunday - Thursday, 9:00 AM - 5:00 PM (EET)",
+    "address": "Our Location",
+    "addressDetail": "Cairo, Egypt"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Enter a valid email address",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "unauthorized": "Please login first",
+    "notFound": "Content not found",
+    "serverError": "A server error occurred"
+  }
+}

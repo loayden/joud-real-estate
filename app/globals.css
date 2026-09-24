@@ -3,25 +3,87 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  --background: 48 20% 97%;
+  --foreground: 0 0% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
+  --muted: 48 10% 95%;
+  --muted-foreground: 0 0% 40%;
+  --border: 48 8% 90%;
+  --input: 48 8% 90%;
+  --ring: 213 60% 30%;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .transition-colors-fast {
+    transition:
+      color 120ms,
+      background-color 120ms,
+      border-color 120ms,
+      box-shadow 120ms;
+  }
+
+  .transition-all-fast {
+    transition: all 120ms ease-out;
+  }
+
+  .transition-all-normal {
+    transition: all 180ms ease-out;
+  }
+
+  .transition-all-slow {
+    transition: all 280ms ease-out;
+  }
+
+  .animate-in {
+    animation:
+      fade-in 0.28s ease-out,
+      slide-up 0.28s ease-out;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--ring));
+  }
+
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: hsl(var(--foreground));
+    letter-spacing: -0.01em;
   }
 }

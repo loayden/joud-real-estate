@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# جود العقارية — Developer Documentation
 
-## Getting Started
+Arabic-first real estate platform for Egypt, built on Next.js, PostgreSQL, Supabase-ready Prisma, Cloudflare R2, Upstash Redis, and Vercel.
 
-First, run the development server:
+## Quick Start (< 15 minutes)
+
+```bash
+npm install
+cp .env.example .env.local
+docker compose -f infrastructure/docker/docker-compose.yml up -d
+npx prisma migrate dev
+npx prisma db seed
+npm run dev
+```
+
+Open [http://localhost:3000/ar](http://localhost:3000/ar).
+
+Default local admin after seed:
+
+- Email: `admin@joud.sa`
+- Password: `JoudAdmin@2024!`
+
+Rotate this password before any shared or production environment.
+
+## Common Commands
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
+npm run type-check
+npm run format:check
+npm run build
+npm run analyze
+npx prisma validate
+npx prisma generate
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.example` to `.env.local` and fill provider credentials as needed.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable              | Purpose                                |
+| --------------------- | -------------------------------------- |
+| `NEXT_PUBLIC_APP_URL` | Public app origin                      |
+| `DATABASE_URL`        | Runtime pooled PostgreSQL URL          |
+| `DIRECT_DATABASE_URL` | Direct PostgreSQL URL for migrations   |
+| `AUTH_SECRET`         | Auth.js session encryption secret      |
+| `RESEND_API_KEY`      | Transactional email                    |
+| `R2_*`                | Cloudflare R2 image and backup storage |
+| `UPSTASH_REDIS_*`     | Cache and rate limiting                |
+| `HCAPTCHA_*`          | Bot protection                         |
+| `SENTRY_*`            | Error monitoring and source maps       |
+| `CRON_SECRET`         | Vercel cron route protection           |
+| `REVALIDATE_SECRET`   | On-demand ISR protection               |
+| `VAPID_*`             | Web Push notifications                 |
 
-## Learn More
+## Architecture Overview
 
-To learn more about Next.js, take a look at the following resources:
+See [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Documentation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Swagger UI: `/api/docs`
+- OpenAPI JSON: `/api/docs/openapi.json`
+- Versioned public API base: `/api/v1`
 
-## Deploy on Vercel
+Auth for v1 endpoints supports both:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Web cookie session
+- `Authorization: Bearer <authjs-session-token>`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Production Readiness
+
+- Health check: `/api/health`
+- Protected cron routes: `/api/cron/expire-listings` and `/api/cron/backup-notification`
+- Daily backup workflow: `.github/workflows/backup.yml`
+- Pre-launch checklist: `docs/PRELAUNCH_CHECKLIST.md`
+
+Do not run production migrations, seed production, or configure live provider resources without an explicit launch plan and approval.
+
+## Phase Completion Tracker
+
+- [x] Phase 1 — Foundation & dev environment
+- [x] Phase 2 — Database foundation & ORM
+- [x] Phase 3 — Authentication system
+- [x] Phase 4 — User profile system
+- [x] Phase 5 — Regions & geographic API
+- [x] Phase 6 — Property categories & types
+- [x] Phase 7 — Property listing creation
+- [x] Phase 8 — Image upload system
+- [x] Phase 9 — Property browsing pages
+- [x] Phase 10 — Search & filtering system
+- [x] Phase 11 — Property details page
+- [x] Phase 12 — Admin dashboard foundation
+- [x] Phase 13 — Admin property management
+- [x] Phase 14 — Admin user management
+- [x] Phase 15 — Admin regions & categories CMS
+- [x] Phase 16 — Favorites & saved searches
+- [x] Phase 17 — Contact & inquiry system
+- [x] Phase 18 — Email notification system
+- [x] Phase 19 — SEO & Core Web Vitals
+- [x] Phase 20 — Security hardening
+- [x] Phase 21 — Admin analytics & reporting
+- [x] Phase 22 — Performance & caching layer
+- [x] Phase 23 — Production deployment & monitoring scaffolding
+- [x] Phase 24 — Mobile, API docs, feature flags, push, AI/payment scaffolds
+
+## Known Production Follow-Ups
+
+- Resolve dependency audit findings. Current automated remediation requires breaking upgrades for Next.js, next-intl, and next-pwa.
+- Replace Auth.js JWT sessions with a true revocation strategy if immediate logout/session invalidation is required across all devices.
+- Run restore drills for database backups before launch.
+- Add real AI search only after pgvector/embedding infrastructure is designed and cost-controlled.

@@ -19,7 +19,8 @@
 - Steps: run `npm run build` while `next dev` is running → subsequent SSR page renders 500 (`Cannot find module './vendor-chunks/@sentry.js'`); API routes unaffected (search API 200 while `/ar` 500).
 - Root cause: production build overwrites `.next/` out from under the dev server's incremental cache.
 - Fix: stop dev → clear `.next` → restart dev. Process rule: never build and serve-dev from the same directory concurrently; CI uses clean checkouts.
-- Status: open (fix in progress).
+- Status: VERIFIED (recurrence confirmed the rule: after `npm run build`, dev served 404s on `/_not-found` routing; stop → `rm -rf .next` → restart restores 200s).
+- Recurrence evidence: 2026-09-24 final pass — `/ar` 200 before build, 404 after build with dev still running; API routes unaffected.
 
 ### ISSUE-012 — high — security — nonce-only CSP broke the app's own inline scripts/styles (22 console errors/page) — VERIFIED
 

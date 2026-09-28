@@ -3,7 +3,7 @@
 **Date:** 2026-09-24 · **Branch:** `stabilize` · **Mode:** read-only audit → autonomous fix loop (dev DB `joud_dev` only, fake data, no prod secrets touched)
 **Definition of done:** clean production build, zero console errors on core flows, all three personas complete their journeys, no open critical/high issues.
 
-## Verdict: READY FOR STAGING — 1 low issue open, env blockers remain
+## Verdict: READY FOR STAGING — 1 low issue open (ISSUE-019), env blockers remain
 
 All critical/high issues found across both passes are fixed and verified (ISSUE-006 idempotency and ISSUE-010 page-weight closed post-report; new ISSUE-014/015/016/017/018/019 below). Remaining work is environment credentials (real Redis/R2/mail/captcha keys, Moyasar absent) + production re-measurement. Ship to **staging** once env blockers clear; production after a beta with real agents.
 
@@ -39,7 +39,11 @@ Password-reset tokens ARE single-use (+ session revocation); no N+1 in listing q
 
 ---
 
-## 2. Ownership pass 2 — fixed, verified
+## 2. Ownership passes — fixed, verified (see ISSUES.md for evidence per item)
+
+Pass 2 (backend/mutations): ISSUE-014 (CSRF apiFetch rollout), ISSUE-015 (inquiry null token), ISSUE-016 (pooled event), ISSUE-017 (review-rule UX), ISSUE-018 (area regions + search aliases).
+
+Pass 3 (frontend): ISSUE-020 (mobile search 231px RTL overflow — toolbar `flex-wrap`), ISSUE-021 (Arabic cardinal plurals via new `lib/plural.ts`), ISSUE-022 (home stats mobile rhythm).
 
 - **ISSUE-014 (critical): ~23 authenticated UI mutations returned 403.** CSRF was enforced server-side with only auth forms wired. New `lib/api-client.ts` `apiFetch()` + migrated 23 call sites across 22 files (incl. XHR upload). Browser-verified per flow.
 - **ISSUE-015 (high): inquiry 400 when captcha disabled** (`hcaptchaToken: null` vs zod `.optional()`). Fixed by omitting null; verified 201 + success message.

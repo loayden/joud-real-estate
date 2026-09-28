@@ -36,9 +36,17 @@ import {
 import { prisma } from "@/lib/prisma";
 import { publicSearchCacheKey } from "@/lib/public-properties";
 import { getCached } from "@/lib/redis";
+import { formatArabicCount } from "@/lib/plural";
 import { absoluteUrl, alternateLanguages, localizedUrl } from "@/lib/seo";
 
 const PAGE_SIZE = 20;
+
+const resultUnitForms = {
+  one: "نتيجة",
+  two: "نتيجتان",
+  few: "نتائج",
+  many: "نتيجة",
+} as const;
 
 export const dynamic = "force-dynamic";
 
@@ -359,15 +367,18 @@ export default async function SearchPage({
                 className="text-body font-medium text-foreground"
                 role="status"
               >
-                {results.total.toLocaleString(
-                  locale === "ar" ? "ar-EG" : "en-US",
-                )}{" "}
-                {text.result}
+                {formatArabicCount(
+                  results.total,
+                  locale,
+                  resultUnitForms,
+                  "results",
+                  "result",
+                )}
               </span>
               <FilterChips locale={locale} lookups={lookups} />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <SaveSearchButton locale={locale} />
 
               <Sheet>

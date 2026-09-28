@@ -27,6 +27,7 @@ import {
   propertyListInclude,
   serializePropertyListItem,
 } from "@/lib/property-listing";
+import { arabicUnit } from "@/lib/plural";
 import { getCached } from "@/lib/redis";
 import { absoluteUrl, alternateLanguages, localizedUrl } from "@/lib/seo";
 
@@ -74,8 +75,6 @@ const copy = {
     noFeatured: "No featured listings yet.",
     noLatest: "No published listings yet.",
     categoryCount: "properties",
-    statsProperties: "properties",
-    statsCities: "cities",
     popularAreas: "Most Popular Areas",
     popularAreasDesc: "Discover the most sought-after areas in Egypt",
     trustTitle: "Why Joud Real Estate?",
@@ -96,6 +95,13 @@ const copy = {
 } as const;
 
 const categoryIcons = ["home", "building", "key", "search"] as const;
+
+const unitForms = {
+  ar: {
+    properties: { one: "عقار", two: "عقاران", few: "عقارات", many: "عقار" },
+    cities: { one: "مدينة", two: "مدينتان", few: "مدن", many: "مدينة" },
+  },
+} as const;
 
 const popularAreas = [
   { slug: "new-cairo", nameAr: "القاهرة الجديدة", nameEn: "New Cairo" },
@@ -315,7 +321,7 @@ export default async function HomePage({
       {/* Stats — clean, data-driven */}
       <section className="border-b border-border bg-background">
         <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-px sm:grid-cols-4">
-          <div className="flex items-center gap-4 px-6 py-6">
+          <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
             <div className="grid size-10 place-items-center rounded-lg bg-primary-50 text-primary">
               <Home className="size-5" />
             </div>
@@ -329,11 +335,15 @@ export default async function HomePage({
                 )}
               </p>
               <p className="text-caption text-muted-foreground">
-                {text.statsProperties}
+                {locale === "ar"
+                  ? arabicUnit(totalProperties, unitForms.ar.properties)
+                  : totalProperties === 1
+                    ? "property"
+                    : "properties"}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 px-6 py-6">
+          <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
             <div className="grid size-10 place-items-center rounded-lg bg-primary-50 text-primary">
               <MapPin className="size-5" />
             </div>
@@ -347,11 +357,15 @@ export default async function HomePage({
                 )}
               </p>
               <p className="text-caption text-muted-foreground">
-                {text.statsCities}
+                {locale === "ar"
+                  ? arabicUnit(cities.length, unitForms.ar.cities)
+                  : cities.length === 1
+                    ? "city"
+                    : "cities"}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 px-6 py-6">
+          <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
             <div className="grid size-10 place-items-center rounded-lg bg-success/10 text-success">
               <Shield className="size-5" />
             </div>
@@ -367,7 +381,7 @@ export default async function HomePage({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-4 px-6 py-6">
+          <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
             <div className="grid size-10 place-items-center rounded-lg bg-gold/10 text-gold">
               <TrendingUp className="size-5" />
             </div>

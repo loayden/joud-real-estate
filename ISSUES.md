@@ -14,6 +14,28 @@
 
 ## Open
 
+### ISSUE-022 — low — mobile — home stats cells cramped on small screens — VERIFIED
+
+- Steps: 360px viewport → stats strip labels wrap awkwardly ("وقت الاستجابة" breaks, tight gutters).
+- Fix: responsive cell padding/gaps (`px-4 py-5 gap-3` base, `sm:` restores desktop rhythm).
+- Evidence: mobile screenshot re-shoot; overflow 0.
+- Status: VERIFIED.
+
+### ISSUE-021 — medium — i18n — wrong Arabic cardinal plurals ("٨ نتيجة", "٨ عقار") — VERIFIED
+
+- Root cause: static singular unit labels regardless of count.
+- Fix: new `lib/plural.ts` (`arabicUnit` 1/2/3-10/11+ rules) applied to search results count + homepage stats units (EN side unchanged).
+- Evidence: mobile screenshot shows "٨ عقارات", "٩٢ مدينة"; `tsc` clean.
+- Status: VERIFIED.
+
+### ISSUE-020 — high — mobile — search toolbar controls row never wraps → 231px RTL overflow on phones — VERIFIED
+
+- Steps: 360px viewport → `/ar/search` → content shifted/clipped, `scrollWidth - clientWidth` = 231.
+- Root cause: toolbar controls row (`SaveSearchButton` + filter sheet trigger + `SortSelect` + view toggle) was `flex items-center gap-2` with no wrap; on 360px its min-content exceeds the container and spills left in RTL. (Long bisect ruled out grids, form, input, fonts — section/child hiding isolated the row.)
+- Fix: `flex-wrap` on the controls row.
+- Evidence: overflow 0 on home/search/detail at 360px + fixed screenshot; 26/26 phase-1 suites green post-fix.
+- Status: VERIFIED.
+
 ### ISSUE-019 — low — a11y — ReportButton + SubmitReviewModal use custom overlays without focus trap
 
 - Evidence: both render `div.fixed` overlays (ReportButton has `role="dialog" aria-modal`; SubmitReviewModal overlay lacks both). Keyboard Enter operability verified; mouse flows verified; but Tab can leave the modal, and screen-reader announcement is weaker than Radix.

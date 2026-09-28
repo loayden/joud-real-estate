@@ -1,17 +1,19 @@
 import { HttpError } from "@/lib/api-response";
 
 function isPlaceholder(value: string | undefined) {
-  return !value || value.includes("xxx") || value.includes("test");
+  if (!value) return true;
+  const trimmed = value.trim();
+  return !trimmed || trimmed.includes("xxx") || trimmed.includes("test");
 }
 
 export function isHcaptchaConfigured() {
   return !isPlaceholder(
-    process.env.HCAPTCHA_SECRET ?? process.env.HCAPTCHA_SECRET_KEY,
+    process.env.HCAPTCHA_SECRET || process.env.HCAPTCHA_SECRET_KEY,
   );
 }
 
 export function shouldRenderHcaptcha() {
-  return !isPlaceholder(process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY);
+  return !isPlaceholder(process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY?.trim());
 }
 
 export async function verifyHcaptchaToken(
@@ -34,7 +36,11 @@ export async function verifyHcaptchaToken(
     throw new HttpError("Captcha verification failed", 400, "CAPTCHA_REQUIRED");
   }
 
-  const secret = process.env.HCAPTCHA_SECRET ?? process.env.HCAPTCHA_SECRET_KEY;
+  const secret = (
+    process.env.HCAPTCHA_SECRET ||
+    process.env.HCAPTCHA_SECRET_KEY ||
+    ""
+  ).trim();
   const params = new URLSearchParams();
   params.set("secret", secret!);
   params.set("response", token);

@@ -8,7 +8,8 @@ import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
 import { ComparisonDrawer } from "@/components/property/ComparisonDrawer";
 import { locales, type Locale } from "@/i18n/routing";
-import { alternateLanguages, getSeoAppUrl, localizedUrl } from "@/lib/seo";
+import { getSafeMetadataBase } from "@/lib/app-url";
+import { alternateLanguages, localizedUrl } from "@/lib/seo";
 
 import "../globals.css";
 
@@ -44,7 +45,7 @@ export function generateMetadata({
       template: `%s | ${title}`,
     },
     description,
-    metadataBase: new URL(getSeoAppUrl()),
+    metadataBase: getSafeMetadataBase(),
     alternates: {
       canonical: localizedUrl(locale),
       languages: alternateLanguages(""),

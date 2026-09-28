@@ -70,7 +70,8 @@ function redirectToLogin(req: NextRequest, locale: string) {
 }
 
 function getAppOrigin() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL;
+  const raw = process.env.NEXT_PUBLIC_APP_URL || process.env.AUTH_URL || "";
+  const appUrl = raw.trim().replace(/\/$/, "");
 
   if (!appUrl) return null;
 

@@ -33,17 +33,23 @@ export async function getFavoritePropertyIds(
   propertyIds: string[],
 ) {
   if (!userId || propertyIds.length === 0) return [];
+  if (!process.env.DATABASE_URL?.trim()) return [];
 
-  const favorites = await prisma.favorite.findMany({
-    where: {
-      userId,
-      propertyId: { in: propertyIds },
-      property: { status: "APPROVED" },
-    },
-    select: { propertyId: true },
-  });
+  try {
+    const favorites = await prisma.favorite.findMany({
+      where: {
+        userId,
+        propertyId: { in: propertyIds },
+        property: { status: "APPROVED" },
+      },
+      select: { propertyId: true },
+    });
 
-  return favorites.map((favorite) => favorite.propertyId);
+    return favorites.map((favorite) => favorite.propertyId);
+  } catch (error) {
+    console.error("Favorite IDs lookup failed", error);
+    return [];
+  }
 }
 
 export async function getUserFavorites(userId: string) {

@@ -1,11 +1,8 @@
 import { locales, type Locale } from "@/i18n/routing";
+import { getAppUrl } from "@/lib/app-url";
 
 export function getSeoAppUrl() {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.AUTH_URL ??
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
+  return getAppUrl();
 }
 
 export function absoluteUrl(pathOrUrl: string) {

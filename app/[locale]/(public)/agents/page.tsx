@@ -31,37 +31,47 @@ const copy = {
 export const revalidate = 300;
 
 async function getAgents() {
-  const agents = await prisma.user.findMany({
-    where: {
-      role: "AGENT",
-      status: "ACTIVE",
-    },
-    select: {
-      id: true,
-      sellerScore: true,
-      sellerRatingCount: true,
-      profile: {
-        select: {
-          firstName: true,
-          lastName: true,
-          avatarUrl: true,
-          bio: true,
-          city: {
-            select: { nameAr: true, nameEn: true, slug: true },
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.warn("DATABASE_URL is not set — returning empty agents list");
+    return [];
+  }
+
+  try {
+    const agents = await prisma.user.findMany({
+      where: {
+        role: "AGENT",
+        status: "ACTIVE",
+      },
+      select: {
+        id: true,
+        sellerScore: true,
+        sellerRatingCount: true,
+        profile: {
+          select: {
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            bio: true,
+            city: {
+              select: { nameAr: true, nameEn: true, slug: true },
+            },
+          },
+        },
+        _count: {
+          select: {
+            properties: { where: { status: "APPROVED" } },
           },
         },
       },
-      _count: {
-        select: {
-          properties: { where: { status: "APPROVED" } },
-        },
-      },
-    },
-    orderBy: [{ sellerScore: "desc" }, { sellerRatingCount: "desc" }],
-    take: 24,
-  });
+      orderBy: [{ sellerScore: "desc" }, { sellerRatingCount: "desc" }],
+      take: 24,
+    });
 
-  return agents.filter((a) => a.profile);
+    return agents.filter((a) => a.profile);
+  } catch (error) {
+    console.error("Agents fetch failed — rendering empty list", error);
+    return [];
+  }
 }
 
 export async function generateMetadata({

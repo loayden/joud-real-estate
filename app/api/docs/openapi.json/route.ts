@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl =
+  (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").trim() ||
+  "http://localhost:3000";
 
 const spec: OpenAPIV3.Document = {
   openapi: "3.0.3",

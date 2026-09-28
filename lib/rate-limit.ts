@@ -59,18 +59,18 @@ function redisConfigured(): boolean {
 }
 
 function createRateLimiter(memoryFallback: InMemoryRateLimiter): RateLimiter {
-  // Production requires Redis so limits hold across instances.
-  // NOTE: Upstash-backed limiter wiring is pending real credentials
-  // (see BLOCKERS.md); until then production refuses to serve rather
-  // than silently running per-instance limits. Skip the check during
-  // `next build` static analysis (NEXT_PHASE=phase-production-build).
+  // Redis-backed limits are ideal for multi-instance production, but the app
+  // must stay up when Upstash creds are missing (e.g. fresh Vercel project
+  // without env vars). Fall back to in-memory limits with a warning instead
+  // of throwing — throwing here 500s every API route and every page that
+  // imports a limiter. Skip the warning during `next build` static analysis.
   if (
     process.env.NODE_ENV === "production" &&
     process.env.NEXT_PHASE !== "phase-production-build" &&
     !redisConfigured()
   ) {
-    throw new Error(
-      "Rate limiting requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in production.",
+    console.warn(
+      "Rate limiting with in-memory fallback: UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN not configured. Set them in Vercel for shared limits across instances.",
     );
   }
   return memoryFallback;

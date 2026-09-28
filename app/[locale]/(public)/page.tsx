@@ -121,65 +121,91 @@ const popularAreas = [
 export const revalidate = 300;
 
 async function getHomepageData() {
-  return getCached(
-    "homepage:public",
-    async () => {
-      const [
-        featured,
-        latest,
-        categories,
-        counts,
-        totalProperties,
-        cityCounts,
-      ] = await Promise.all([
-        prisma.property.findMany({
-          where: { status: "APPROVED", isFeatured: true },
-          orderBy: [{ featuredUntil: "desc" }, { publishedAt: "desc" }],
-          take: 6,
-          include: propertyListInclude,
-        }),
-        prisma.property.findMany({
-          where: { status: "APPROVED" },
-          orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-          take: 8,
-          include: propertyListInclude,
-        }),
-        prisma.propertyCategory.findMany({
-          where: { isActive: true },
-          orderBy: { sortOrder: "asc" },
-          select: { id: true, nameAr: true, nameEn: true, slug: true },
-          take: 4,
-        }),
-        prisma.property.groupBy({
-          by: ["categoryId"],
-          where: { status: "APPROVED" },
-          _count: { id: true },
-        }),
-        prisma.property.count({ where: { status: "APPROVED" } }),
-        prisma.city.findMany({
-          where: { isActive: true },
-          select: { id: true, nameAr: true, nameEn: true, slug: true },
-          orderBy: { sortOrder: "asc" },
-        }),
-      ]);
+  if (!process.env.DATABASE_URL?.trim()) {
+    // Vercel runtime without DB env: render empty sections instead of 500.
+    console.warn("DATABASE_URL is not set — returning empty homepage data");
+    return {
+      featured: [],
+      latest: [],
+      categories: [],
+      totalProperties: 0,
+      cities: [],
+    };
+  }
 
-      const countByCategory = new Map(
-        counts.map((count) => [count.categoryId, count._count.id]),
-      );
+  try {
+    return await getCached(
+      "homepage:public",
+      async () => {
+        const [
+          featured,
+          latest,
+          categories,
+          counts,
+          totalProperties,
+          cityCounts,
+        ] = await Promise.all([
+          prisma.property.findMany({
+            where: { status: "APPROVED", isFeatured: true },
+            orderBy: [{ featuredUntil: "desc" }, { publishedAt: "desc" }],
+            take: 6,
+            include: propertyListInclude,
+          }),
+          prisma.property.findMany({
+            where: { status: "APPROVED" },
+            orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+            take: 8,
+            include: propertyListInclude,
+          }),
+          prisma.propertyCategory.findMany({
+            where: { isActive: true },
+            orderBy: { sortOrder: "asc" },
+            select: { id: true, nameAr: true, nameEn: true, slug: true },
+            take: 4,
+          }),
+          prisma.property.groupBy({
+            by: ["categoryId"],
+            where: { status: "APPROVED" },
+            _count: { id: true },
+          }),
+          prisma.property.count({ where: { status: "APPROVED" } }),
+          prisma.city.findMany({
+            where: { isActive: true },
+            select: { id: true, nameAr: true, nameEn: true, slug: true },
+            orderBy: { sortOrder: "asc" },
+          }),
+        ]);
 
-      return {
-        featured: featured.map(serializePropertyListItem),
-        latest: latest.map(serializePropertyListItem),
-        categories: categories.map((category) => ({
-          ...category,
-          count: countByCategory.get(category.id) ?? 0,
-        })),
-        totalProperties,
-        cities: cityCounts,
-      };
-    },
-    300,
-  );
+        const countByCategory = new Map(
+          counts.map((count) => [count.categoryId, count._count.id]),
+        );
+
+        return {
+          featured: featured.map(serializePropertyListItem),
+          latest: latest.map(serializePropertyListItem),
+          categories: categories.map((category) => ({
+            ...category,
+            count: countByCategory.get(category.id) ?? 0,
+          })),
+          totalProperties,
+          cities: cityCounts,
+        };
+      },
+      300,
+    );
+  } catch (error) {
+    console.error(
+      "Homepage data fetch failed — rendering empty sections",
+      error,
+    );
+    return {
+      featured: [],
+      latest: [],
+      categories: [],
+      totalProperties: 0,
+      cities: [],
+    };
+  }
 }
 
 function getCategoryName(
@@ -241,23 +267,38 @@ export default async function HomePage({
   const [site, data, session, heroImages] = await Promise.all([
     getTranslations("site"),
     getHomepageData(),
-    auth(),
-    getHeroPexelsImages(),
+    auth().catch((error) => {
+      console.error("Homepage auth check failed", error);
+      return null;
+    }),
+    getHeroPexelsImages().catch((error) => {
+      console.error("Homepage hero images failed", error);
+      return [];
+    }),
   ]);
   const { featured, latest, categories, totalProperties, cities } = data;
   const categoryImageEntries = await Promise.all(
     categories.map(async (category) => {
-      const images = await getCategoryPexelsImages(category.slug);
-      return [category.slug, images[0] ?? null] as const;
+      try {
+        const images = await getCategoryPexelsImages(category.slug);
+        return [category.slug, images[0] ?? null] as const;
+      } catch {
+        return [category.slug, null] as const;
+      }
     }),
   );
   const categoryImageBySlug = new Map(categoryImageEntries);
-  const favoriteIds = await getFavoritePropertyIds(
-    session?.user?.id,
-    Array.from(
-      new Set([...featured, ...latest].map((property) => property.id)),
-    ),
-  );
+  let favoriteIds: string[] = [];
+  try {
+    favoriteIds = await getFavoritePropertyIds(
+      session?.user?.id,
+      Array.from(
+        new Set([...featured, ...latest].map((property) => property.id)),
+      ),
+    );
+  } catch (error) {
+    console.error("Homepage favorites lookup failed", error);
+  }
 
   return (
     <div className="bg-background">

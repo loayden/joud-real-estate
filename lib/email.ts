@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 
+import { getAppUrl as getSafeAppUrl } from "@/lib/app-url";
 import { redis } from "@/lib/redis";
 
 export type Locale = "ar" | "en";
@@ -76,7 +77,7 @@ type PriceDropAlertEmailData = {
   currency: string;
 };
 
-const resendApiKey = process.env.RESEND_API_KEY;
+const resendApiKey = process.env.RESEND_API_KEY?.trim();
 const resend =
   resendApiKey && !resendApiKey.includes("xxx")
     ? new Resend(resendApiKey)
@@ -145,11 +146,7 @@ const sampleEmailData = {
 };
 
 export function getAppUrl() {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.AUTH_URL ??
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
+  return getSafeAppUrl();
 }
 
 export function isEmailDeliveryConfigured() {

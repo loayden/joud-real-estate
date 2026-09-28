@@ -8,19 +8,35 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [properties, categories] = await Promise.all([
-    prisma.property.findMany({
-      where: { status: "APPROVED" },
-      orderBy: { updatedAt: "desc" },
-      select: { slug: true, updatedAt: true },
-      take: 5000,
-    }),
-    prisma.propertyCategory.findMany({
-      where: { isActive: true },
-      orderBy: { sortOrder: "asc" },
-      select: { id: true, updatedAt: true },
-    }),
-  ]);
+  let properties: { slug: string; updatedAt: Date }[] = [];
+  let categories: { id: string; updatedAt: Date }[] = [];
+
+  if (!process.env.DATABASE_URL?.trim()) {
+    console.warn("DATABASE_URL is not set — returning static sitemap only");
+  } else {
+    try {
+      const [dbProperties, dbCategories] = await Promise.all([
+        prisma.property.findMany({
+          where: { status: "APPROVED" },
+          orderBy: { updatedAt: "desc" },
+          select: { slug: true, updatedAt: true },
+          take: 5000,
+        }),
+        prisma.propertyCategory.findMany({
+          where: { isActive: true },
+          orderBy: { sortOrder: "asc" },
+          select: { id: true, updatedAt: true },
+        }),
+      ]);
+      properties = dbProperties;
+      categories = dbCategories;
+    } catch (error) {
+      console.error(
+        "Sitemap DB fetch failed — returning static URLs only",
+        error,
+      );
+    }
+  }
 
   const staticUrls = [
     "",

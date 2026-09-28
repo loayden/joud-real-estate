@@ -120,6 +120,10 @@ export async function authorizeCredentials(
 }
 
 export const authConfig = {
+  // Required on Vercel: requests arrive at preview/production hostnames that
+  // never equal AUTH_URL exactly, and without this every auth() call throws
+  // UntrustedHost (seen in production logs on /ar, /en, /ar/agents).
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {

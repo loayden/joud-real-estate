@@ -1,7 +1,7 @@
 import createBundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
 import createNextIntlPlugin from "next-intl/plugin";
-import createPWA from "next-pwa";
+import createPWA from "@ducanh2912/next-pwa";
 
 const withNextIntl = createNextIntlPlugin("./i18n.ts");
 const withBundleAnalyzer = createBundleAnalyzer({

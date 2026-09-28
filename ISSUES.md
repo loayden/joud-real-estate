@@ -14,6 +14,14 @@
 
 ## Open
 
+### ISSUE-023 — critical (deploy) — Vercel `npm install` fails: `react-leaflet@5` requires React 19, app uses React 18 — VERIFIED
+
+- Steps: Vercel build on `stabilize@9bfd59a` → `npm error ERESOLVE ... peer react@"^19.0.0" from react-leaflet@5.0.0` → build never starts. (Locally masked by `--legacy-peer-deps`.)
+- Root cause: `react-leaflet@5` was an unused dependency (all maps use plain `leaflet` dynamic imports; zero imports of `react-leaflet` anywhere).
+- Fix: `npm uninstall react-leaflet` (kept `leaflet` + `@types/leaflet`). Verified with clean `npm ci` exit 0 (same command shape Vercel runs), `tsc` 0, `next build` clean.
+- Evidence: `npm ci` exit 0; build clean; pushed to `stabilize`+`main` (`da34afa`).
+- Status: VERIFIED (Vercel redeploy pending on their side).
+
 ### ISSUE-022 — low — mobile — home stats cells cramped on small screens — VERIFIED
 
 - Steps: 360px viewport → stats strip labels wrap awkwardly ("وقت الاستجابة" breaks, tight gutters).

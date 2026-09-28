@@ -69,18 +69,9 @@ export default withSentryConfig(composedConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   telemetry: false,
-  // TEMPORARY: trace which files the sourcemap uploader scans, to pin down
-  // the UUID-named phantom artifacts. Removed again once identified.
-  debug: process.env.SENTRY_UPLOAD_DEBUG === "1",
   widenClientFileUpload: true,
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,
-    // Vercel-internal function bundles (UUID-named, no local counterpart and
-    // no source maps by design) trigger "Could not determine a source map
-    // reference" warnings. They carry no mappable application code, so skip
-    // them; real bundles keep uploading with maps. `?` matches exactly one
-    // character, so genuine Next.js chunks can never match this shape.
-    ignore: ["**/????????-????-????-????-????????????-*.js"],
   },
   webpack: {
     automaticVercelMonitors: true,

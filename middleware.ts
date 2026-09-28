@@ -70,7 +70,13 @@ function redirectToLogin(req: NextRequest, locale: string) {
 }
 
 function getAppOrigin() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.AUTH_URL;
+  // NB: `??` would keep an empty-string env var, which then throws in
+  // `new URL("")`. Empty counts as missing.
+  const appUrl = (
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.AUTH_URL ||
+    ""
+  ).trim();
 
   if (!appUrl) return null;
 

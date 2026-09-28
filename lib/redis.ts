@@ -1,14 +1,29 @@
 import { Redis } from "@upstash/redis";
 
 function isPlaceholder(value: string | undefined) {
-  return !value || value.includes("xxx") || value.includes("AXxx");
+  if (!value) return true;
+  const trimmed = value.trim();
+  return !trimmed || trimmed.includes("xxx") || trimmed.includes("AXxx");
 }
 
 function createRedisClient() {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
 
-  if (isPlaceholder(url) || isPlaceholder(token)) {
+  if (!url || !token || isPlaceholder(url) || isPlaceholder(token)) {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      console.warn(
+        "UPSTASH_REDIS_REST_URL has an invalid protocol — Redis disabled",
+      );
+      return null;
+    }
+  } catch {
+    console.warn("UPSTASH_REDIS_REST_URL is not a valid URL — Redis disabled");
     return null;
   }
 

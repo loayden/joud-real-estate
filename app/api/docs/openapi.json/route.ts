@@ -1,10 +1,12 @@
 import type { OpenAPIV3 } from "openapi-types";
 import { NextResponse } from "next/server";
 
+import { getBaseUrl } from "@/lib/base-url";
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const appUrl = getBaseUrl();
 
 const spec: OpenAPIV3.Document = {
   openapi: "3.0.3",

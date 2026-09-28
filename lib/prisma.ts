@@ -1,5 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 
+// Fail-fast env validation: throws at build time when DATABASE_URL or
+// DIRECT_DATABASE_URL is missing/empty, so static generation can never
+// silently prerender pages with empty data.
+import "@/lib/env";
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };

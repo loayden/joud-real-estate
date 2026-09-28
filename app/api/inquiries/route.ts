@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { auth } from "@/lib/auth";
 import { requireSession } from "@/lib/auth-utils";
+import { getBaseUrl } from "@/lib/base-url";
 import { sendInquiryNotificationEmail } from "@/lib/email";
 import { verifyHcaptchaToken } from "@/lib/hcaptcha";
 import { getReceivedInquiries, parseInquiryStatus } from "@/lib/inquiries";
@@ -23,10 +24,7 @@ function fullName(profile?: { firstName: string; lastName: string } | null) {
 }
 
 function getAppUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(
-    /\/$/,
-    "",
-  );
+  return getBaseUrl();
 }
 
 export async function GET(req: NextRequest) {

@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 
+import { getBaseUrl } from "@/lib/base-url";
 import { redis } from "@/lib/redis";
 
 export type Locale = "ar" | "en";
@@ -145,11 +146,7 @@ const sampleEmailData = {
 };
 
 export function getAppUrl() {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.AUTH_URL ??
-    "http://localhost:3000"
-  ).replace(/\/$/, "");
+  return getBaseUrl();
 }
 
 export function isEmailDeliveryConfigured() {

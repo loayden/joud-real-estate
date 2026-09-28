@@ -1,12 +1,14 @@
 import { HttpError } from "@/lib/api-response";
 
 function isPlaceholder(value: string | undefined) {
-  return !value || value.includes("xxx") || value.includes("test");
+  if (!value) return true;
+  const trimmed = value.trim();
+  return !trimmed || trimmed.includes("xxx") || trimmed.includes("test");
 }
 
 export function isHcaptchaConfigured() {
   return !isPlaceholder(
-    process.env.HCAPTCHA_SECRET ?? process.env.HCAPTCHA_SECRET_KEY,
+    process.env.HCAPTCHA_SECRET || process.env.HCAPTCHA_SECRET_KEY,
   );
 }
 
@@ -34,9 +36,20 @@ export async function verifyHcaptchaToken(
     throw new HttpError("Captcha verification failed", 400, "CAPTCHA_REQUIRED");
   }
 
-  const secret = process.env.HCAPTCHA_SECRET ?? process.env.HCAPTCHA_SECRET_KEY;
+  const secret = (
+    process.env.HCAPTCHA_SECRET ||
+    process.env.HCAPTCHA_SECRET_KEY ||
+    ""
+  ).trim();
+  if (!secret) {
+    throw new HttpError(
+      "hCaptcha is not configured",
+      503,
+      "HCAPTCHA_NOT_CONFIGURED",
+    );
+  }
   const params = new URLSearchParams();
-  params.set("secret", secret!);
+  params.set("secret", secret);
   params.set("response", token);
   if (remoteIp) params.set("remoteip", remoteIp);
 

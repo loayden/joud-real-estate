@@ -75,6 +75,9 @@ function formatDate(date: Date, locale: Locale) {
   }).format(date);
 }
 
+// User-specific page: must never be prerendered at build time.
+export const dynamic = "force-dynamic";
+
 export function generateMetadata({
   params: { locale },
 }: {

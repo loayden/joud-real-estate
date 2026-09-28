@@ -51,26 +51,29 @@ const memoryPasswordChange = new InMemoryRateLimiter(5, 900_000);
 const memoryVerifyEmail = new InMemoryRateLimiter(5, 900_000);
 
 function redisConfigured(): boolean {
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? "";
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
+  const url = process.env.UPSTASH_REDIS_REST_URL || "";
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || "";
   const placeholder = (v: string) =>
     !v || v.includes("xxx") || v.includes("AXxx") || v.includes("replace-with");
   return !placeholder(url) && !placeholder(token);
 }
 
 function createRateLimiter(memoryFallback: InMemoryRateLimiter): RateLimiter {
-  // Production requires Redis so limits hold across instances.
-  // NOTE: Upstash-backed limiter wiring is pending real credentials
-  // (see BLOCKERS.md); until then production refuses to serve rather
-  // than silently running per-instance limits. Skip the check during
-  // `next build` static analysis (NEXT_PHASE=phase-production-build).
+  // Redis-backed limits are ideal for multi-instance production, but throwing
+  // here 500s every API route that imports a limiter (login, register,
+  // inquiry, upload, ...) whenever Upstash creds are missing — verified in
+  // production logs. Fall back to in-memory limits with a warning instead;
+  // set UPSTASH_REDIS_REST_URL/_TOKEN in Vercel for shared limits. Skip the
+  // warning during `next build` static analysis (NEXT_PHASE=phase-production-build).
   if (
     process.env.NODE_ENV === "production" &&
     process.env.NEXT_PHASE !== "phase-production-build" &&
     !redisConfigured()
   ) {
-    throw new Error(
-      "Rate limiting requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in production.",
+    console.warn(
+      "Upstash Redis is not configured — using in-memory rate limiting. " +
+        "Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel " +
+        "for shared limits across instances.",
     );
   }
   return memoryFallback;

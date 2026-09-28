@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 const reasons = [
   "FAKE_LISTING",
@@ -93,7 +94,7 @@ export function ReportButton({
     setMessage(null);
 
     try {
-      const response = await fetch("/api/reports", {
+      const response = await apiFetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ propertyId, reason, details }),

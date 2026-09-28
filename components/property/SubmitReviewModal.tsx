@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -23,6 +24,8 @@ const copy = {
     reviewBody: "اكتب تجربتك",
     submit: "إرسال للمراجعة",
     pending: "تم إرسال التقييم للمراجعة.",
+    requiresInquiry: "يمكنك التقييم بعد إرسال استفسار عن العقار.",
+    requiresInquiryError: "لا يمكنك التقييم قبل إرسال استفسار عن هذا العقار.",
     close: "إغلاق",
   },
   en: {
@@ -38,6 +41,10 @@ const copy = {
     reviewBody: "Write your experience",
     submit: "Submit for review",
     pending: "Review submitted for moderation.",
+    requiresInquiry:
+      "You can review after sending an inquiry about the property.",
+    requiresInquiryError:
+      "You cannot review before sending an inquiry about this property.",
     close: "Close",
   },
 } as const;
@@ -76,7 +83,7 @@ export function SubmitReviewModal({
     setMessage(null);
 
     try {
-      const response = await fetch("/api/ratings", {
+      const response = await apiFetch("/api/ratings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -89,10 +96,15 @@ export function SubmitReviewModal({
       const payload = (await response.json()) as {
         success: boolean;
         error?: string;
+        code?: string;
       };
 
       if (!payload.success) {
-        setMessage(payload.error ?? "Unable to submit review");
+        setMessage(
+          payload.code === "RATING_REQUIRES_INQUIRY"
+            ? text.requiresInquiryError
+            : (payload.error ?? "Unable to submit review"),
+        );
         return;
       }
 
@@ -129,6 +141,9 @@ export function SubmitReviewModal({
                 <h2 className="text-xl font-bold">{text.title}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {text.subtitle}
+                </p>
+                <p className="mt-1 text-xs font-semibold text-muted-foreground">
+                  {text.requiresInquiry}
                 </p>
               </div>
               <Button

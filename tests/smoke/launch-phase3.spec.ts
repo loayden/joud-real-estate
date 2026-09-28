@@ -156,6 +156,36 @@ test.describe("Phase 3 - moderation lifecycle (API)", () => {
   });
 });
 
+test.describe("Phase 3 - feature flag toggle round-trips (API)", () => {
+  test("toggle persists and restores", async ({ browser }) => {
+    const adminCtx = await browser.newContext({ storageState: ADMIN_STATE });
+    const areq = adminCtx.request;
+    const csrfBody = await (await areq.get(`${BASE}/api/csrf`)).json();
+    const headers = {
+      "x-csrf-token": csrfBody.data.token,
+      "Content-Type": "application/json",
+    };
+    const list = await areq.get(`${BASE}/api/admin/feature-flags`);
+    expect(list.status()).toBe(200);
+    const flags = (await list.json()).data;
+    const target = flags.find((f: any) => f.key === "AGENT_REGISTRATION");
+    expect(target).toBeTruthy();
+    const flipped = await areq.put(
+      `${BASE}/api/admin/feature-flags/${target.id}`,
+      { headers, data: { isEnabled: !target.isEnabled } },
+    );
+    expect(flipped.status()).toBe(200);
+    expect((await flipped.json()).data.isEnabled).toBe(!target.isEnabled);
+    const restored = await areq.put(
+      `${BASE}/api/admin/feature-flags/${target.id}`,
+      { headers, data: { isEnabled: target.isEnabled } },
+    );
+    expect(restored.status()).toBe(200);
+    expect((await restored.json()).data.isEnabled).toBe(target.isEnabled);
+    await adminCtx.close();
+  });
+});
+
 test.describe("Phase 3 - permissions + IDOR (API + pages)", () => {
   test("normal user blocked from admin; IDOR on other-user listing; mine scoped", async ({
     page,

@@ -22,6 +22,7 @@ import {
   passwordChangeSchema,
   type PasswordChangeInput,
 } from "@/lib/validations/profile";
+import { apiFetch } from "@/lib/api-client";
 
 type Profile = {
   firstName: string;
@@ -115,7 +116,7 @@ export function SettingsForm({
   async function onPasswordSubmit(values: PasswordChangeInput) {
     setPasswordStatus(null);
 
-    const response = await fetch("/api/users/password", {
+    const response = await apiFetch("/api/users/password", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),
@@ -140,7 +141,7 @@ export function SettingsForm({
     setIsSavingLanguage(true);
     setLanguageStatus(null);
 
-    const response = await fetch("/api/users/profile", {
+    const response = await apiFetch("/api/users/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

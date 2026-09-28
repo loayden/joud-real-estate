@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sheet";
 import { Link, type Locale, usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-client";
 
 type ApiResponse<T> =
   | { success: true; data: T }
@@ -85,7 +86,7 @@ export function FavoriteButton({
     onFavoriteChange?.(optimistic);
 
     try {
-      const response = await fetch("/api/favorites", {
+      const response = await apiFetch("/api/favorites", {
         body: JSON.stringify({ propertyId }),
         headers: { "Content-Type": "application/json" },
         method: "POST",

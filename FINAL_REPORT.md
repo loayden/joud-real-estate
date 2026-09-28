@@ -3,13 +3,13 @@
 **Date:** 2026-09-24 · **Branch:** `stabilize` · **Mode:** read-only audit → autonomous fix loop (dev DB `joud_dev` only, fake data, no prod secrets touched)
 **Definition of done:** clean production build, zero console errors on core flows, all three personas complete their journeys, no open critical/high issues.
 
-## Verdict: READY FOR STAGING — 0 open issues, env blockers remain
+## Verdict: READY FOR STAGING — 1 low issue open, env blockers remain
 
-All 13 issues found across this pass are fixed and verified (11 verified during the pass + ISSUE-006 idempotency and ISSUE-010 page-weight closed post-report). Remaining work is environment credentials (real Redis/R2/mail/captcha keys, Moyasar absent) + production re-measurement. Ship to **staging** once env blockers clear; production after a beta with real agents.
+All critical/high issues found across both passes are fixed and verified (ISSUE-006 idempotency and ISSUE-010 page-weight closed post-report; new ISSUE-014/015/016/017/018/019 below). Remaining work is environment credentials (real Redis/R2/mail/captcha keys, Moyasar absent) + production re-measurement. Ship to **staging** once env blockers clear; production after a beta with real agents.
 
 ---
 
-## 1. Issues found and fixed, by severity
+## 1. Issues found and fixed, by severity (original pass — see ISSUES.md for full log)
 
 ### Critical (2) — both fixed + verified
 
@@ -39,26 +39,38 @@ Password-reset tokens ARE single-use (+ session revocation); no N+1 in listing q
 
 ---
 
-## 2. Features added this pass
+## 2. Ownership pass 2 — fixed, verified
+
+- **ISSUE-014 (critical): ~23 authenticated UI mutations returned 403.** CSRF was enforced server-side with only auth forms wired. New `lib/api-client.ts` `apiFetch()` + migrated 23 call sites across 22 files (incl. XHR upload). Browser-verified per flow.
+- **ISSUE-015 (high): inquiry 400 when captcha disabled** (`hcaptchaToken: null` vs zod `.optional()`). Fixed by omitting null; verified 201 + success message.
+- **ISSUE-016 (medium): save-search crash on pooled `event.currentTarget`.** Fixed with capture-first `form` ref; verified success + list entry.
+- **ISSUE-017 (medium): review rule undisclosed until submit.** Upfront hint + localized `RATING_REQUIRES_INQUIRY` mapping; verified both paths, no English leak.
+- **ISSUE-018 (high): area navigation doubly broken** (5/8 homepage links 404'd; `?citySlug=` silently dropped). Area route now resolves regions (aggregated); schema aliases + sidebar/chips fallbacks; 13-test regression spec.
+- **ISSUE-019 (low, open):** ReportButton/SubmitReviewModal custom overlays lack focus trap — migrate to Radix Sheet in next a11y pass.
+- **Quality:** StepLocation `useEffect` deps warning eliminated (ref-guard pattern, zero lint warnings repo-wide).
+- **Test data hygiene:** ~60 QA-generated rows removed; another user's drafts deliberately untouched.
+- Final tally: **61/61 green** (13 phase-1 + 13 area + 8 phase-2 + 4 phase-3 + 25 smoke), `tsc` 0, `next lint` 0 warnings, `next build` clean, prod probe (home 1065ms/LCP 372ms/1.6MB; search 800/88/1.3MB; detail 1124/100/1.7MB).
+
+## 3. Features added (cumulative, both passes)
 
 - **Owner analytics on my-listings:** per-listing views/inquiries/favorites column (Eye/MessageCircle/Heart, localized, `aria-hidden` icons, `title` tooltips) + Playwright regression test.
 - **Accessibility:** skip-to-content link + `main#main-content`; `text-gold` → `text-gold-700` on light surfaces (10 files, ~5.9:1 contrast); `aria-live="polite" role="status"` on search results count.
 - **Security:** CSRF double-submit tokens (lib + middleware + `/api/csrf` + React hooks + Login/Register integration); CSP + security headers on every middleware response; upload Sharp timeouts (30s/15s); Saudi regions/cities/properties archived out of the live tables (20 Egyptian regions remain).
 - **Test infrastructure:** 25 smoke tests + 13 phase-1 + 7 phase-2 + 3 phase-3 specs; stored-session auth (`tests/launch/gen-auth-state.mjs`) to stay under the 5/min/IP login limit; CI workflow extended (typecheck/lint/build/bundle-analysis/smoke).
 
-## 3. Feature-gap check vs Property Finder / OLX / Aqarmap
+## 4. Feature-gap check vs Property Finder / OLX / Aqarmap
 
 Already present (verified, not built): saved searches + alerts, map view, WhatsApp click-to-chat (`wa.me`), share button, compare drawer + `/compare` page, similar listings, agents list page, owner dashboard totals, report flow, listing expiry cron. Gaps left for roadmap: per-agent public profile pages, expiry **renewal** UI/API, virtual tours, AI matching, native app. Smallest-first pick implemented above (owner analytics).
 
-## 4. Remaining blockers (see BLOCKERS.md)
+## 5. Remaining blockers (see BLOCKERS.md)
 
 Real credentials required for staging/prod: `AUTH_SECRET`, `RESEND_API_KEY`, R2 keys, Upstash Redis, hCaptcha, `REVALIDATE_SECRET`/`CRON_SECRET`, Sentry, VAPID, `PEXELS_API_KEY`. **Moyasar absent entirely** — no payment flow exists; if monetization is launch-scoped, sandbox keys + full flow test are required.
 
-## 5. Required env vars (production)
+## 6. Required env vars (production)
 
 `DATABASE_URL`, `DIRECT_DATABASE_URL`, `AUTH_SECRET` (random 32B), `AUTH_URL`/`NEXT_PUBLIC_APP_URL`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, R2 (`R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL`/`NEXT_PUBLIC_R2_CDN_URL`), `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`, `HCAPTCHA_SECRET` + `NEXT_PUBLIC_HCAPTCHA_SITE_KEY`, `REVALIDATE_SECRET`, `CRON_SECRET`, `CSRF_SECRET`, Sentry DSN/org/project/token (optional but recommended), VAPID keys (push), `PEXELS_API_KEY` (or remove Pexels fallbacks).
 
-## 6. Deploy checklist
+## 7. Deploy checklist
 
 1. Clean checkout on `stabilize`; `npm ci --legacy-peer-deps` (react-leaflet peer conflict documented).
 2. Set all Section-5 vars (no `xxx`/`replace-with` placeholders; validator: `BLOCKERS.md` scan).
@@ -70,7 +82,7 @@ Real credentials required for staging/prod: `AUTH_SECRET`, `RESEND_API_KEY`, R2 
 8. Monitoring: Sentry DSN, uptime check on `/api/health`, log alert on 5xx rate.
 9. Rollback: previous Vercel deployment / DB snapshot before migrate.
 
-## 7. How to run the tests
+## 8. How to run the tests
 
 ```bash
 npm run dev                                   # dev server on :3000
@@ -79,10 +91,10 @@ PLAYWRIGHT_BASE_URL=http://localhost:3000 npx playwright test tests/smoke/launch
 npm run type-check && npm run lint && npm run build
 ```
 
-## 8. Final verification evidence (2026-09-24)
+## 9. Final verification evidence (2026-09-24, updated 2026-09-26)
 
-- `tsc --noEmit`: exit 0. `next lint`: exit 0 (1 known warning: StepLocation exhaustive-deps). `next build`: compiled + 164kB shared JS.
-- Playwright (chromium, workers=1, suites run per-file with cooldowns): phase-1 13/13, phase-2 8/8 (incl. new idempotency test), phase-3 3/3, core-flows 25/25 — **49/49 green**, zero console errors on core flows. Note: back-to-back full runs in dev occasionally flake (auth 5/min/IP budget; first-visit admin compile latency; dev-server contention) — per-file reruns consistently green. CI should run against `next start` (production build).
+- `tsc --noEmit`: exit 0. `next lint`: exit 0, **zero warnings** (StepLocation deps fixed via ref-guard). `next build`: compiled + 164kB shared JS.
+- Playwright (chromium, workers=1, suites run per-file with cooldowns): phase-1 13/13, phase-1-area 13/13, phase-2 8/8, phase-3 4/4, core-flows 25/25 — **63/63 green**, zero console errors on core flows. Note: back-to-back full runs in dev occasionally flake (auth 5/min/IP budget; first-visit admin compile latency; dev-server contention) — per-file reruns consistently green. CI should run against `next start` (production build).
 - Personas: guest (anonymous), `qa-user@joud.test` (USER), `admin@joud.sa` (SUPER_ADMIN) — all journeys completed.
-- DB: 20 active Egyptian regions, 92 cities, 8 approved properties, 0 orphans; Saudi data archived to `archived_*` tables; `idempotency_keys` table + 2 migrations this pass.
-- Open issues: **none**. ISSUE-006 and ISSUE-010 closed with tests + production measurements above.
+- DB: 20 active Egyptian regions, 92 cities, 8 approved properties, 0 orphans; Saudi data archived to `archived_*` tables; `idempotency_keys` table + 2 migrations this pass; ~60 QA-generated rows cleaned (other users' data untouched).
+- Open issues: **1 low** (ISSUE-019 custom-modal focus trap — migrate ReportButton/SubmitReviewModal to Radix Sheet in next a11y pass).

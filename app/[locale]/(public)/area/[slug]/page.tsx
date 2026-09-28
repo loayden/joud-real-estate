@@ -43,7 +43,65 @@ const copy = {
 
 export const revalidate = 300;
 
-async function getAreaData(slug: string) {
+type AreaData =
+  | {
+      kind: "city";
+      nameAr: string;
+      nameEn: string;
+      slug: string;
+      parentNameAr: string;
+      parentNameEn: string;
+      filterParam: string;
+      properties: ReturnType<typeof serializePropertyListItem>[];
+      avgPrice: number;
+      pricePerSqm: number;
+      totalCount: number;
+      saleCount: number;
+      rentCount: number;
+    }
+  | {
+      kind: "region";
+      nameAr: string;
+      nameEn: string;
+      slug: string;
+      parentNameAr: string;
+      parentNameEn: string;
+      filterParam: string;
+      properties: ReturnType<typeof serializePropertyListItem>[];
+      avgPrice: number;
+      pricePerSqm: number;
+      totalCount: number;
+      saleCount: number;
+      rentCount: number;
+    };
+
+function toAreaStats(
+  aggregateStats: {
+    _avg: { price: unknown; area: unknown };
+    _count: { id: number };
+  },
+  listingTypeStats: Array<{ listingType: string; _count: { id: number } }>,
+) {
+  const avgPrice = aggregateStats._avg.price
+    ? Number(aggregateStats._avg.price)
+    : 0;
+  const avgArea = aggregateStats._avg.area
+    ? Number(aggregateStats._avg.area)
+    : 0;
+  const listingTypeCounts = new Map(
+    listingTypeStats.map((s) => [s.listingType, s._count.id]),
+  );
+
+  return {
+    avgPrice,
+    pricePerSqm: avgArea > 0 ? Math.round(avgPrice / avgArea) : 0,
+    totalCount: aggregateStats._count.id,
+    saleCount: listingTypeCounts.get("SALE") ?? 0,
+    rentCount: listingTypeCounts.get("RENT") ?? 0,
+  };
+}
+
+async function getAreaData(slug: string): Promise<AreaData | null> {
   const city = await prisma.city.findUnique({
     where: { slug },
     select: {
@@ -55,48 +113,83 @@ async function getAreaData(slug: string) {
     },
   });
 
-  if (!city) return null;
+  if (city) {
+    const [properties, aggregateStats, listingTypeStats] = await Promise.all([
+      prisma.property.findMany({
+        where: { cityId: city.id, status: "APPROVED" },
+        orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }],
+        take: 12,
+        include: propertyListInclude,
+      }),
+      prisma.property.aggregate({
+        where: { cityId: city.id, status: "APPROVED" },
+        _avg: { price: true, area: true },
+        _count: { id: true },
+      }),
+      prisma.property.groupBy({
+        by: ["listingType"],
+        where: { cityId: city.id, status: "APPROVED" },
+        _count: { id: true },
+      }),
+    ]);
 
+    return {
+      kind: "city",
+      nameAr: city.nameAr,
+      nameEn: city.nameEn,
+      slug: city.slug,
+      parentNameAr: city.region.nameAr,
+      parentNameEn: city.region.nameEn,
+      filterParam: `citySlug=${city.slug}`,
+      properties: properties.map(serializePropertyListItem),
+      ...toAreaStats(aggregateStats, listingTypeStats),
+    };
+  }
+
+  const region = await prisma.region.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      nameAr: true,
+      nameEn: true,
+      slug: true,
+      cities: { select: { id: true } },
+    },
+  });
+
+  if (!region) return null;
+
+  const cityIds = region.cities.map((c) => c.id);
+  const where = { cityId: { in: cityIds }, status: "APPROVED" as const };
   const [properties, aggregateStats, listingTypeStats] = await Promise.all([
     prisma.property.findMany({
-      where: { cityId: city.id, status: "APPROVED" },
+      where,
       orderBy: [{ isFeatured: "desc" }, { publishedAt: "desc" }],
       take: 12,
       include: propertyListInclude,
     }),
     prisma.property.aggregate({
-      where: { cityId: city.id, status: "APPROVED" },
+      where,
       _avg: { price: true, area: true },
       _count: { id: true },
     }),
     prisma.property.groupBy({
       by: ["listingType"],
-      where: { cityId: city.id, status: "APPROVED" },
+      where,
       _count: { id: true },
     }),
   ]);
 
-  const avgPrice = aggregateStats._avg.price
-    ? Number(aggregateStats._avg.price)
-    : 0;
-  const avgArea = aggregateStats._avg.area
-    ? Number(aggregateStats._avg.area)
-    : 0;
-  const pricePerSqm = avgArea > 0 ? Math.round(avgPrice / avgArea) : 0;
-  const totalCount = aggregateStats._count.id;
-
-  const listingTypeCounts = new Map(
-    listingTypeStats.map((s) => [s.listingType, s._count.id]),
-  );
-
   return {
-    city,
+    kind: "region",
+    nameAr: region.nameAr,
+    nameEn: region.nameEn,
+    slug: region.slug,
+    parentNameAr: "",
+    parentNameEn: "",
+    filterParam: `regionSlug=${region.slug}`,
     properties: properties.map(serializePropertyListItem),
-    avgPrice,
-    pricePerSqm,
-    totalCount,
-    saleCount: listingTypeCounts.get("SALE") ?? 0,
-    rentCount: listingTypeCounts.get("RENT") ?? 0,
+    ...toAreaStats(aggregateStats, listingTypeStats),
   };
 }
 
@@ -109,7 +202,7 @@ export async function generateMetadata({
   if (!data) return { title: "Area not found" };
 
   const isArabic = locale === "ar";
-  const cityName = isArabic ? data.city.nameAr : data.city.nameEn;
+  const cityName = isArabic ? data.nameAr : data.nameEn;
   const title = isArabic
     ? `عقارات ${cityName} - أسعار ومعلومات`
     : `${cityName} Properties - Prices & Info`;
@@ -170,7 +263,6 @@ export default async function AreaDetailPage({
   if (!data) notFound();
 
   const {
-    city,
     properties,
     avgPrice,
     pricePerSqm,
@@ -178,8 +270,13 @@ export default async function AreaDetailPage({
     saleCount,
     rentCount,
   } = data;
-  const cityName = locale === "ar" ? city.nameAr : city.nameEn;
-  const regionName = locale === "ar" ? city.region.nameAr : city.region.nameEn;
+  const cityName = locale === "ar" ? data.nameAr : data.nameEn;
+  const regionName =
+    data.kind === "city"
+      ? locale === "ar"
+        ? data.parentNameAr
+        : data.parentNameEn
+      : "";
 
   const session = await auth();
   const favoriteIds = await getFavoritePropertyIds(
@@ -214,8 +311,12 @@ export default async function AreaDetailPage({
             </h1>
             <p className="max-w-2xl text-body text-muted-foreground">
               {text.description} {cityName}
-              {locale === "ar" ? "، " : ", "}
-              {regionName}
+              {regionName ? (
+                <>
+                  {locale === "ar" ? "، " : ", "}
+                  {regionName}
+                </>
+              ) : null}
             </p>
           </div>
 
@@ -262,7 +363,7 @@ export default async function AreaDetailPage({
             {locale === "ar" ? "أحدث العقارات" : "Latest Properties"}
           </h2>
           <Button asChild variant="secondary" size="sm">
-            <Link href={`/properties?citySlug=${slug}`}>
+            <Link href={`/properties?${data.filterParam}`}>
               {text.viewAll}
               <ArrowUpLeft className="size-4" />
             </Link>

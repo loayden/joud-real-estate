@@ -109,6 +109,14 @@ export function StepLocation({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
+  const mapInitializedRef = useRef(false);
+  // Initial view captured once: the init effect below is mount-only, and
+  // subsequent center/zoom changes are applied by the sync effect.
+  const initialViewRef = useRef({
+    lat: data.latitude ?? DEFAULT_CENTER.lat,
+    lng: data.longitude ?? DEFAULT_CENTER.lng,
+    zoom: data.latitude ? 15 : 10,
+  });
 
   const handleLocationChange = useCallback(
     (
@@ -157,7 +165,7 @@ export function StepLocation({
   );
 
   useEffect(() => {
-    if (!mapRef.current || mapLoaded) return;
+    if (!mapRef.current || mapInitializedRef.current) return;
 
     let cancelled = false;
 
@@ -167,9 +175,10 @@ export function StepLocation({
 
         if (cancelled || !mapRef.current) return;
 
+        const initialView = initialViewRef.current;
         const map = L.map(mapRef.current, {
-          center: [mapCenter.lat, mapCenter.lng],
-          zoom: mapZoom,
+          center: [initialView.lat, initialView.lng],
+          zoom: initialView.zoom,
           zoomControl: true,
         });
 
@@ -185,7 +194,7 @@ export function StepLocation({
           iconAnchor: [14, 14],
         });
 
-        const marker = L.marker([mapCenter.lat, mapCenter.lng], {
+        const marker = L.marker([initialView.lat, initialView.lng], {
           icon,
           draggable: true,
         }).addTo(map);
@@ -206,6 +215,7 @@ export function StepLocation({
 
         mapInstanceRef.current = map;
         markerRef.current = marker;
+        mapInitializedRef.current = true;
         setMapLoaded(true);
       } catch {
         // Leaflet failed to load — map stays hidden

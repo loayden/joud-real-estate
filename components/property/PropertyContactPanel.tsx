@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 type ApiResponse<T> =
   | { success: true; data: T }
@@ -152,7 +153,7 @@ export function PropertyContactPanel({
     }
 
     try {
-      const response = await fetch("/api/inquiries", {
+      const response = await apiFetch("/api/inquiries", {
         body: JSON.stringify({
           propertyId,
           locale,
@@ -160,7 +161,7 @@ export function PropertyContactPanel({
           email: formData.get("email"),
           phone: formData.get("phone"),
           message: formData.get("message"),
-          hcaptchaToken: captchaToken,
+          ...(captchaToken ? { hcaptchaToken: captchaToken } : {}),
         }),
         headers: { "Content-Type": "application/json" },
         method: "POST",

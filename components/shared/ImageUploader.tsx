@@ -16,6 +16,7 @@ import { useMemo, useRef, useState } from "react";
 import type { PropertyImageItem } from "@/components/property/PropertyForm/types";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { apiFetch, getCsrfToken } from "@/lib/api-client";
 
 type UploadingFile = {
   id: string;
@@ -112,7 +113,7 @@ export function ImageUploader({
     onImagesChange?.(nextImages);
   }
 
-  function uploadFiles(fileList: FileList | File[]) {
+  async function uploadFiles(fileList: FileList | File[]) {
     const files = Array.from(fileList);
     const remainingSlots = maxImages - images.length;
     const acceptedFiles = files.slice(0, Math.max(remainingSlots, 0));
@@ -145,6 +146,10 @@ export function ImageUploader({
 
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/upload/property-images");
+    const csrfToken = await getCsrfToken();
+    if (csrfToken) {
+      xhr.setRequestHeader("x-csrf-token", csrfToken);
+    }
 
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable) return;
@@ -201,7 +206,7 @@ export function ImageUploader({
 
   async function saveReorder(nextImages: PropertyImageItem[]) {
     try {
-      const response = await fetch("/api/upload/property-images/reorder", {
+      const response = await apiFetch("/api/upload/property-images/reorder", {
         body: JSON.stringify({
           images: nextImages.map((image, index) => ({
             id: image.id,
@@ -256,9 +261,12 @@ export function ImageUploader({
     updateImages(images.filter((image) => image.id !== imageId));
 
     try {
-      const response = await fetch(`/api/upload/property-images/${imageId}`, {
-        method: "DELETE",
-      });
+      const response = await apiFetch(
+        `/api/upload/property-images/${imageId}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       if (!response.ok) {
         throw new Error(text.deleteError);

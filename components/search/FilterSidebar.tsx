@@ -193,13 +193,17 @@ export function FilterSidebar({
   );
   const [regionId, setRegionId] = useState(() =>
     getInitialId(
-      searchParams.get("regionId") ?? searchParams.get("region"),
+      searchParams.get("regionId") ??
+        searchParams.get("region") ??
+        searchParams.get("regionSlug"),
       lookups.regions,
     ),
   );
   const [cityId, setCityId] = useState(() =>
     getInitialId(
-      searchParams.get("cityId") ?? searchParams.get("city"),
+      searchParams.get("cityId") ??
+        searchParams.get("city") ??
+        searchParams.get("citySlug"),
       cities,
     ),
   );
@@ -242,13 +246,17 @@ export function FilterSidebar({
     setListingType(searchParams.get("listingType") ?? "");
     setRegionId(
       getInitialId(
-        searchParams.get("regionId") ?? searchParams.get("region"),
+        searchParams.get("regionId") ??
+          searchParams.get("region") ??
+          searchParams.get("regionSlug"),
         lookups.regions,
       ),
     );
     setCityId(
       getInitialId(
-        searchParams.get("cityId") ?? searchParams.get("city"),
+        searchParams.get("cityId") ??
+          searchParams.get("city") ??
+          searchParams.get("citySlug"),
         cities,
       ),
     );

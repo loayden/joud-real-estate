@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Link, type Locale, useRouter } from "@/i18n/routing";
 import type { InquiryListItem } from "@/lib/inquiries";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -314,7 +315,7 @@ export function InquiryInbox({
     setError(null);
 
     try {
-      const response = await fetch(`/api/inquiries/${id}/status`, {
+      const response = await apiFetch(`/api/inquiries/${id}/status`, {
         body: JSON.stringify({ status }),
         headers: { "Content-Type": "application/json" },
         method: "PUT",

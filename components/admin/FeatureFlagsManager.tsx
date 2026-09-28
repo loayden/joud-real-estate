@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -74,7 +75,7 @@ export function FeatureFlagsManager({
     setPending((current) => ({ ...current, [flag.id]: true }));
 
     try {
-      const response = await fetch(`/api/admin/feature-flags/${flag.id}`, {
+      const response = await apiFetch(`/api/admin/feature-flags/${flag.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isEnabled }),
@@ -111,7 +112,7 @@ export function FeatureFlagsManager({
     setPending((current) => ({ ...current, create: true }));
 
     try {
-      const response = await fetch("/api/admin/feature-flags", {
+      const response = await apiFetch("/api/admin/feature-flags", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

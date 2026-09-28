@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -38,7 +39,7 @@ export function PriceAlertButton({
     setMessage(null);
 
     try {
-      const response = await fetch("/api/price-alerts", {
+      const response = await apiFetch("/api/price-alerts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ propertyId }),

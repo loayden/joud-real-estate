@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 type PriceAlertItem = {
   id: string;
@@ -57,7 +58,7 @@ export function PriceAlertsList({
   const [items, setItems] = useState(alerts);
 
   async function removeAlert(id: string) {
-    const response = await fetch(`/api/price-alerts/${id}`, {
+    const response = await apiFetch(`/api/price-alerts/${id}`, {
       method: "DELETE",
     });
 

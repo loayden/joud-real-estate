@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/select";
 import type { Locale } from "@/i18n/routing";
 import { useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -140,7 +141,7 @@ export function AdminUserActions({
 
     try {
       await parseResponse(
-        await fetch(endpoint, {
+        await apiFetch(endpoint, {
           body: body ? JSON.stringify(body) : undefined,
           headers: body ? { "Content-Type": "application/json" } : undefined,
           method: "PUT",

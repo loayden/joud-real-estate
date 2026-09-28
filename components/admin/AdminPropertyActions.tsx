@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, type Locale, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -101,7 +102,7 @@ export function AdminPropertyActions({
 
     try {
       await parseResponse(
-        await fetch(endpoint, {
+        await apiFetch(endpoint, {
           method,
           headers: body ? { "Content-Type": "application/json" } : undefined,
           body: body ? JSON.stringify(body) : undefined,

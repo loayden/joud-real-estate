@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-client";
 
 export type ReviewItem = {
   id: string;
@@ -72,7 +73,7 @@ export function ReviewCard({
   const [message, setMessage] = useState<string | null>(null);
 
   async function vote(isHelpful: boolean) {
-    const result = await fetch(`/api/ratings/${review.id}/helpful`, {
+    const result = await apiFetch(`/api/ratings/${review.id}/helpful`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isHelpful }),
@@ -95,7 +96,7 @@ export function ReviewCard({
     setMessage(null);
 
     try {
-      const result = await fetch(`/api/ratings/${review.id}/respond`, {
+      const result = await apiFetch(`/api/ratings/${review.id}/respond`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ response }),

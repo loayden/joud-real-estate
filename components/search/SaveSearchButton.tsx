@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Link, type Locale, usePathname, useRouter } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 type ApiResponse<T> =
   | { success: true; data: T }
@@ -93,20 +94,21 @@ export function SaveSearchButton({ locale }: { locale: Locale }) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
 
     if (!hasFilters) {
       setMessage({ type: "error", text: text.empty });
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     const nameAr = String(formData.get("nameAr") ?? "").trim();
 
     setIsSubmitting(true);
     setMessage(null);
 
     try {
-      const response = await fetch("/api/saved-searches", {
+      const response = await apiFetch("/api/saved-searches", {
         body: JSON.stringify({ nameAr, filters }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -127,7 +129,7 @@ export function SaveSearchButton({ locale }: { locale: Locale }) {
         );
       }
 
-      event.currentTarget.reset();
+      form.reset();
       setMessage({ type: "success", text: text.success });
       router.refresh();
     } catch (error) {

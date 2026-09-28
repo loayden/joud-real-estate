@@ -6,6 +6,7 @@ import { useState } from "react";
 import { DataTable, type DataTableColumn } from "@/components/admin/DataTable";
 import { Button } from "@/components/ui/button";
 import type { Locale } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 type AdminReport = {
   id: string;
@@ -69,7 +70,7 @@ export function ReportsManagementTable({
     id: string,
     status: "REVIEWING" | "RESOLVED" | "DISMISSED",
   ) {
-    const response = await fetch(`/api/admin/reports/${id}/resolve`, {
+    const response = await apiFetch(`/api/admin/reports/${id}/resolve`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),

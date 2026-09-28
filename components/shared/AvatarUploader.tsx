@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-client";
 
 type ApiResponse<T> =
   | { success: true; data: T }
@@ -55,7 +56,7 @@ export function AvatarUploader({
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/api/upload/avatar", {
+      const response = await apiFetch("/api/upload/avatar", {
         method: "POST",
         body: formData,
       });

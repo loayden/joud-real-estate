@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Locale } from "@/i18n/routing";
 import { profileUpdateSchema } from "@/lib/validations/profile";
+import { apiFetch } from "@/lib/api-client";
 
 type ProfileFormValues = z.input<typeof profileUpdateSchema>;
 
@@ -139,7 +140,7 @@ export function ProfileForm({
   async function onSubmit(values: ProfileFormValues) {
     setStatus(null);
 
-    const response = await fetch("/api/users/profile", {
+    const response = await apiFetch("/api/users/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(values),

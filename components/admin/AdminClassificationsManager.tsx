@@ -34,6 +34,7 @@ import type {
   AdminPropertyType,
 } from "@/lib/admin-cms";
 import { cn } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -430,7 +431,7 @@ export function AdminClassificationsManager({
 
     try {
       const result = await parseApi<T>(
-        await fetch(path, {
+        await apiFetch(path, {
           body: body ? JSON.stringify(body) : undefined,
           headers: body ? { "Content-Type": "application/json" } : undefined,
           method,

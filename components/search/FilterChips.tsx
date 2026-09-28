@@ -92,8 +92,13 @@ export function FilterChips({
 
   const chips = useMemo<Chip[]>(() => {
     const regionValue =
-      searchParams.get("regionId") ?? searchParams.get("region");
-    const cityValue = searchParams.get("cityId") ?? searchParams.get("city");
+      searchParams.get("regionId") ??
+      searchParams.get("region") ??
+      searchParams.get("regionSlug");
+    const cityValue =
+      searchParams.get("cityId") ??
+      searchParams.get("city") ??
+      searchParams.get("citySlug");
     const categoryId = searchParams.get("categoryId");
     const typeId = searchParams.get("typeId");
     const region = lookups.regions.find(

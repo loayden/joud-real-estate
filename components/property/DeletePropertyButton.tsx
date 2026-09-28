@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/routing";
+import { apiFetch } from "@/lib/api-client";
 
 const text = {
   ar: {
@@ -38,7 +39,7 @@ export function DeletePropertyButton({
     setError(null);
 
     try {
-      const response = await fetch(`/api/properties/${propertyId}`, {
+      const response = await apiFetch(`/api/properties/${propertyId}`, {
         method: "DELETE",
       });
 

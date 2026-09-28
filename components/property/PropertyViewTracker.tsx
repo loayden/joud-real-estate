@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { apiFetch } from "@/lib/api-client";
+
 const RECENTLY_VIEWED_KEY = "joud:recently-viewed";
 const MAX_RECENT = 12;
 
@@ -45,7 +47,7 @@ export function PropertyViewTracker({
       // Browsers can disable sessionStorage.
     }
 
-    fetch(`/api/properties/${propertyId}/view`, {
+    void apiFetch(`/api/properties/${propertyId}/view`, {
       method: "POST",
       keepalive: true,
     }).catch(() => {

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, type Locale, useRouter } from "@/i18n/routing";
 import type { AdminPropertyListItem } from "@/lib/admin-properties";
+import { apiFetch } from "@/lib/api-client";
 
 const copy = {
   ar: {
@@ -147,7 +148,7 @@ export function AdminPropertiesTable({
 
     try {
       await parseResponse(
-        await fetch("/api/admin/properties/bulk-action", {
+        await apiFetch("/api/admin/properties/bulk-action", {
           body: JSON.stringify({
             ids: selectedIds,
             action,

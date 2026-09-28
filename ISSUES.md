@@ -14,6 +14,53 @@
 
 ## Open
 
+### ISSUE-019 — low — a11y — ReportButton + SubmitReviewModal use custom overlays without focus trap
+
+- Evidence: both render `div.fixed` overlays (ReportButton has `role="dialog" aria-modal`; SubmitReviewModal overlay lacks both). Keyboard Enter operability verified; mouse flows verified; but Tab can leave the modal, and screen-reader announcement is weaker than Radix.
+- Fix (recommended): migrate both to the existing Radix `Sheet`/`Dialog` primitives (focus trap + Escape + focus restore built in, already used by SaveSearchButton/Login sheets).
+- Rationale for deferring: flows fully functional with zero errors; migration touches 2 verified flows — batch with next a11y pass, covered by new regression tests first.
+- Status: open.
+
+### ISSUE-018 — high — product — area navigation broken two ways: 5/8 homepage area links 404, all `?citySlug=` links silently unfiltered — VERIFIED
+
+- Steps: homepage → click New Cairo / Sheikh Zayed / 6th October / New Capital / North Coast → "الصفحة غير موجودة" UI. Footer popular-areas / area-page "view all" (`?citySlug=X`) → unfiltered results AND filter UI shows nothing selected.
+- Root cause: (a) `/area/[slug]` only resolved CITY slugs, but homepage mixes 5 REGION slugs; (b) zod `searchQuerySchema` stripped unknown `citySlug`/`regionSlug` keys, and sidebar/chips only read canonical `city`/`region`.
+- Fix: (a) area route resolves regions too (aggregate across cities, `?regionSlug=` view-all); (b) schema `.transform()` aliases `citySlug→city`, `regionSlug→region`; (c) sidebar (4 spots) + chips read alias fallbacks.
+- Evidence: all 8 area slugs render content; `?citySlug=heliopolis` filters API + reflects in UI; new 13-test Playwright spec green; `tsc` clean. (Side note: `notFound()` boundaries return HTTP 200 in dev — verify status on staging/prod build; content is correct.)
+- Status: VERIFIED.
+
+### ISSUE-017 — medium — product — review submit fails opaquely without prior inquiry (rule undisclosed until submit) — VERIFIED
+
+- Steps: open review modal on a property you never inquired about → submit → 403 `RATING_REQUIRES_INQUIRY` (English server string shown to Arabic users).
+- Root cause: intentional anti-spam rule (`submitPropertyRating` requires ≥1 inquiry as sender) was enforced server-side only; UI neither disclosed it upfront nor localized the error.
+- Fix: upfront hint in modal (`requiresInquiry` copy both locales) + client maps `RATING_REQUIRES_INQUIRY` → localized message.
+- Evidence: UI walk — no-inquiry submit shows Arabic error (no English leak); inquiry→review flow 201+201 with pending message; zero errors.
+- Status: VERIFIED.
+
+### ISSUE-016 — medium — frontend — save-search success crashes on `event.currentTarget.reset()` (pooled synthetic event) — VERIFIED
+
+- Steps: search with filter → save button → name → submit → API 201 but UI shows "Cannot read properties of null (reading 'reset')", no success message.
+- Root cause: async submit handler reads `event.currentTarget` after awaits; React nullifies it. (PropertyContactPanel already used the correct capture-first pattern; only SaveSearchButton had the bug.)
+- Fix: capture `const form = event.currentTarget` synchronously; use `form.reset()`.
+- Evidence: UI walk — success message + item appears in saved list, zero errors.
+- Status: VERIFIED.
+
+### ISSUE-015 — high — frontend — inquiry submit 400 when captcha disabled (`hcaptchaToken: null` fails zod `.optional()`) — VERIFIED
+
+- Steps: as user on property page, fill inquiry form, submit → 400 VALIDATION_ERROR.
+- Root cause: `PropertyContactPanel` sent explicit `null` for `hcaptchaToken`; zod `.optional()` accepts only `undefined`. (RegisterForm was safe — `?? undefined` keys are dropped by `JSON.stringify`.)
+- Fix: spread captcha token only when non-null.
+- Evidence: UI walk — `POST /api/inquiries` 201 + "تم إرسال الاستفسار", zero errors.
+- Status: VERIFIED.
+
+### ISSUE-014 — critical — frontend — nearly every authenticated UI mutation broken (403 CSRF_INVALID): favorites, inquiries, reports, ratings, price alerts, saved searches, profile, avatar, image reorder, admin actions
+
+- Steps: as logged-in user, click favorite on any property → optimistic flip → error "تعذر تحديث المفضلة", state reverts. Same for inquiry submit, report, review, price alert, save search, profile save, image reorder/delete, all admin mutations.
+- Root cause: server-side CSRF enforcement (middleware) was added with only Login/Register forms wired; ~23 other mutating `fetch` call sites never sent `x-csrf-token`. Backend tests passed because they set the header explicitly — UI paths were never exercised.
+- Fix: new `lib/api-client.ts` `apiFetch()` (token cache + credentials + single retry on CSRF_INVALID) + `getCsrfToken()` for XHR; migrated 23 call sites across 22 files; XHR upload sets header after `open()`.
+- Evidence: browser walk — favorite toggles true→false→true with 0 errors, API confirms; `tsc` clean; `next lint` clean (1 known warning).
+- Status: VERIFIED (favorite flow; remaining flows verifying below).
+
 ### ISSUE-013 — high — devops — `npm run build` corrupts the running dev server's `.next` cache (recurrence of ISSUE-001 class)
 
 - Steps: run `npm run build` while `next dev` is running → subsequent SSR page renders 500 (`Cannot find module './vendor-chunks/@sentry.js'`); API routes unaffected (search API 200 while `/ar` 500).

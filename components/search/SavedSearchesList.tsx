@@ -7,6 +7,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link, type Locale, useRouter } from "@/i18n/routing";
 import type { SavedSearchFilters } from "@/lib/saved-searches";
+import { apiFetch } from "@/lib/api-client";
 
 export type SavedSearchView = {
   id: string;
@@ -75,7 +76,7 @@ export function SavedSearchesList({
     setSearches((current) => current.filter((search) => search.id !== id));
 
     try {
-      const response = await fetch(`/api/saved-searches/${id}`, {
+      const response = await apiFetch(`/api/saved-searches/${id}`, {
         method: "DELETE",
       });
       const payload = await response.json().catch(() => null);

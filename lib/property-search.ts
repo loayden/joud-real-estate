@@ -9,34 +9,47 @@ import {
 } from "@/lib/property-listing";
 import { prisma } from "@/lib/prisma";
 
-export const searchQuerySchema = z.object({
-  q: z.string().trim().max(120).optional(),
-  regionId: z.string().cuid().optional(),
-  region: z.string().trim().max(100).optional(),
-  cityId: z.string().cuid().optional(),
-  city: z.string().trim().max(100).optional(),
-  categoryId: z.string().cuid().optional(),
-  typeId: z.string().cuid().optional(),
-  listingType: z.enum(["SALE", "RENT"]).optional(),
-  minPrice: z.coerce.number().nonnegative().optional(),
-  maxPrice: z.coerce.number().positive().optional(),
-  minArea: z.coerce.number().nonnegative().optional(),
-  maxArea: z.coerce.number().positive().optional(),
-  bedrooms: z.coerce.number().int().min(0).max(50).optional(),
-  bathrooms: z.coerce.number().int().min(0).max(30).optional(),
-  sort: z
-    .enum([
-      "newest",
-      "price_asc",
-      "price_desc",
-      "area_asc",
-      "price-asc",
-      "price-desc",
-    ])
-    .default("newest"),
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
+export const searchQuerySchema = z
+  .object({
+    q: z.string().trim().max(120).optional(),
+    regionId: z.string().cuid().optional(),
+    region: z.string().trim().max(100).optional(),
+    regionSlug: z.string().trim().max(100).optional(),
+    cityId: z.string().cuid().optional(),
+    city: z.string().trim().max(100).optional(),
+    citySlug: z.string().trim().max(100).optional(),
+    categoryId: z.string().cuid().optional(),
+    typeId: z.string().cuid().optional(),
+    listingType: z.enum(["SALE", "RENT"]).optional(),
+    minPrice: z.coerce.number().nonnegative().optional(),
+    maxPrice: z.coerce.number().positive().optional(),
+    minArea: z.coerce.number().nonnegative().optional(),
+    maxArea: z.coerce.number().positive().optional(),
+    bedrooms: z.coerce.number().int().min(0).max(50).optional(),
+    bathrooms: z.coerce.number().int().min(0).max(30).optional(),
+    sort: z
+      .enum([
+        "newest",
+        "price_asc",
+        "price_desc",
+        "area_asc",
+        "price-asc",
+        "price-desc",
+      ])
+      .default("newest"),
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+  })
+  .transform((data) => {
+    // Accept `?citySlug=` / `?regionSlug=` aliases used by area pages,
+    // footer links, and share URLs; canonical `city` / `region` win.
+    const { citySlug, regionSlug, ...rest } = data;
+    return {
+      ...rest,
+      city: rest.city ?? citySlug,
+      region: rest.region ?? regionSlug,
+    };
+  });
 
 export type SearchParams = z.infer<typeof searchQuerySchema>;
 

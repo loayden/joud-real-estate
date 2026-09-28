@@ -69,6 +69,9 @@ export default withSentryConfig(composedConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   telemetry: false,
+  // TEMPORARY: trace which files the sourcemap uploader scans, to pin down
+  // the UUID-named phantom artifacts. Removed again once identified.
+  debug: process.env.SENTRY_UPLOAD_DEBUG === "1",
   widenClientFileUpload: true,
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,

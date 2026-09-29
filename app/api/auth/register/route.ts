@@ -9,7 +9,7 @@ import {
   sendWelcomeEmail,
   shouldExposeDevelopmentEmailLinks,
 } from "@/lib/email";
-import { verifyHcaptchaToken } from "@/lib/hcaptcha";
+import { verifyCaptchaToken } from "@/lib/captcha";
 import { prisma } from "@/lib/prisma";
 import {
   authRateLimit,
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       return apiError("Invalid registration data", 400, "VALIDATION_ERROR");
     }
 
-    await verifyHcaptchaToken(parsed.data.hcaptchaToken, identifier);
+    await verifyCaptchaToken(parsed.data.hcaptchaToken, identifier);
 
     const { email, password, firstName, lastName, phone, locale } = parsed.data;
     const existingUser = await prisma.user.findFirst({

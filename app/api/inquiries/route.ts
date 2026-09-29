@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth";
 import { requireSession } from "@/lib/auth-utils";
 import { getBaseUrl } from "@/lib/base-url";
 import { sendInquiryNotificationEmail } from "@/lib/email";
-import { verifyHcaptchaToken } from "@/lib/hcaptcha";
+import { verifyCaptchaToken } from "@/lib/captcha";
 import { getReceivedInquiries, parseInquiryStatus } from "@/lib/inquiries";
 import { prisma } from "@/lib/prisma";
 import {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       return apiError("Invalid inquiry data", 400, "VALIDATION_ERROR");
     }
 
-    await verifyHcaptchaToken(parsed.data.hcaptchaToken, identifier);
+    await verifyCaptchaToken(parsed.data.hcaptchaToken, identifier);
 
     const sanitized = {
       ...parsed.data,

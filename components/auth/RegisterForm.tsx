@@ -74,11 +74,11 @@ const copy = {
 export function RegisterForm({ locale }: { locale: Locale }) {
   const text = copy[locale];
   const hcaptchaSiteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
-  const shouldUseCaptcha = Boolean(
-    hcaptchaSiteKey &&
-    !hcaptchaSiteKey.includes("xxx") &&
-    !hcaptchaSiteKey.includes("test"),
-  );
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const isUsableKey = (value: string | undefined) =>
+    Boolean(value && !value.includes("xxx") && !value.includes("test"));
+  const shouldUseCaptcha =
+    isUsableKey(hcaptchaSiteKey) || isUsableKey(turnstileSiteKey);
   const { token: csrfToken } = useCsrfToken();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);

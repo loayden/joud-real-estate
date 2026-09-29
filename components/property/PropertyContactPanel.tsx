@@ -105,11 +105,11 @@ export function PropertyContactPanel({
 }) {
   const text = copy[locale];
   const hcaptchaSiteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
-  const shouldUseCaptcha = Boolean(
-    hcaptchaSiteKey &&
-    !hcaptchaSiteKey.includes("xxx") &&
-    !hcaptchaSiteKey.includes("test"),
-  );
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const isUsableKey = (value: string | undefined) =>
+    Boolean(value && !value.includes("xxx") && !value.includes("test"));
+  const shouldUseCaptcha =
+    isUsableKey(hcaptchaSiteKey) || isUsableKey(turnstileSiteKey);
   const [isPhoneVisible, setIsPhoneVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);

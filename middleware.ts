@@ -69,22 +69,31 @@ function redirectToLogin(req: NextRequest, locale: string) {
   return NextResponse.redirect(loginUrl);
 }
 
-function getAppOrigin() {
-  // NB: `??` would keep an empty-string env var, which then throws in
-  // `new URL("")`. Empty counts as missing.
-  const appUrl = (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.AUTH_URL ||
-    ""
-  ).trim();
-
-  if (!appUrl) return null;
-
-  try {
-    return new URL(appUrl).origin;
-  } catch {
-    return null;
+function getAllowedApiOrigins(): string[] {
+  // The app is served from more than one origin (e.g. both the plain
+  // *.vercel.app domain and the team-suffixed alias). Browsers send an
+  // Origin header on cross-site POSTs and same-origin POSTs, so every
+  // legitimate app origin must be listed here or mutations 403.
+  const rawValues = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.AUTH_URL,
+    ...(process.env.ALLOWED_ORIGINS || "").split(","),
+  ];
+  const origins = new Set<string>();
+  for (const raw of rawValues) {
+    const cleaned = (raw || "").trim().replace(/\/$/, "");
+    if (!cleaned) continue;
+    try {
+      origins.add(new URL(cleaned).origin);
+    } catch {
+      // Ignore malformed values; fail closed for that entry.
+    }
   }
+  return [...origins];
+}
+
+function getAppOrigin() {
+  return getAllowedApiOrigins()[0] ?? null;
 }
 
 function isLocalhostOrigin(origin: string) {
@@ -103,11 +112,13 @@ function isAllowedApiOrigin(req: NextRequest) {
     return true;
   }
 
-  const appOrigin = getAppOrigin();
+  const allowedOrigins = getAllowedApiOrigins();
 
-  if (appOrigin && origin === appOrigin) {
+  if (allowedOrigins.includes(origin)) {
     return true;
   }
+
+  const appOrigin = getAppOrigin();
 
   if (
     appOrigin &&
@@ -126,9 +137,7 @@ function applyCorsHeaders(req: NextRequest, response: NextResponse) {
   const appOrigin = getAppOrigin();
 
   const allowedOrigin =
-    origin && isAllowedApiOrigin(req) && appOrigin
-      ? appOrigin
-      : (appOrigin ?? origin);
+    origin && isAllowedApiOrigin(req) ? origin : (appOrigin ?? origin);
 
   if (allowedOrigin) {
     response.headers.set("Access-Control-Allow-Origin", allowedOrigin);

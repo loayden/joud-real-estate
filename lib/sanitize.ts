@@ -1,14 +1,17 @@
-import DOMPurify from "isomorphic-dompurify";
-
 import type { PropertyMutationInput } from "@/lib/validations/property";
 
-const plainTextSanitizeOptions = {
-  ALLOWED_ATTR: [],
-  ALLOWED_TAGS: [],
-};
-
+// NOTE: previously backed by isomorphic-dompurify (jsdom), which crashes at
+// runtime in the production serverless bundle (CJS require() of ESM-only
+// transitive deps: html-encoding-sniffer -> @exodus/bytes). All call sites
+// only need plain-text tag stripping for fields that React auto-escapes on
+// render, so a dependency-free implementation is both safer and sufficient.
 export function sanitizePlainText(value: string) {
-  return DOMPurify.sanitize(value, plainTextSanitizeOptions).trim();
+  return value
+    .replace(/<script[\s\S]*?<\/script\s*>/gi, "")
+    .replace(/<style[\s\S]*?<\/style\s*>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
 }
 
 export function sanitizeOptionalPlainText<T extends string | undefined | null>(

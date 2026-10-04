@@ -141,6 +141,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
 
     setDevVerificationUrl(payload.data.devVerificationUrl ?? null);
     setIsComplete(true);
+    window.dispatchEvent(new CustomEvent("joud:session-changed"));
   }
 
   if (isComplete) {

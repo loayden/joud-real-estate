@@ -112,6 +112,7 @@ export function LoginForm({
 
     router.push(payload.data.redirectTo ?? `/${locale}/dashboard`);
     router.refresh();
+    window.dispatchEvent(new CustomEvent("joud:session-changed"));
   }
 
   return (

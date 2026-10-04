@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { OnboardingGate } from "@/components/onboarding/OnboardingOverlay";
 import { ComparisonDrawer } from "@/components/property/ComparisonDrawer";
 import { locales, type Locale } from "@/i18n/routing";
 import { alternateLanguages, getSeoAppUrl, localizedUrl } from "@/lib/seo";
@@ -125,6 +126,7 @@ export default async function LocaleLayout({
             </main>
             <ComparisonDrawer locale={locale} />
             <Footer locale={locale} />
+            <OnboardingGate locale={locale} />
           </div>
         </NextIntlClientProvider>
       </body>

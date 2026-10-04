@@ -57,6 +57,9 @@ const copy = {
     languageError: "تعذر تحديث تفضيل اللغة.",
     ar: "العربية",
     en: "English",
+    tourTitle: "الجولة التعريفية",
+    tourDescription: "شاهد من جديد الترحيب والتعريف بأقسام المنصة.",
+    tourButton: "إعادة عرض الجولة",
   },
   en: {
     securityTitle: "Security",
@@ -78,6 +81,9 @@ const copy = {
     languageError: "Could not update language preference.",
     ar: "العربية",
     en: "English",
+    tourTitle: "Product tour",
+    tourDescription: "Replay the welcome tour and platform overview.",
+    tourButton: "Replay tour",
   },
 } as const;
 
@@ -239,6 +245,25 @@ export function SettingsForm({
               {isSubmitting ? text.updatingPassword : text.updatePassword}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{text.tourTitle}</CardTitle>
+          <CardDescription>{text.tourDescription}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            className="w-full sm:w-fit"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("joud:replay-onboarding"))
+            }
+            type="button"
+            variant="secondary"
+          >
+            {text.tourButton}
+          </Button>
         </CardContent>
       </Card>
 

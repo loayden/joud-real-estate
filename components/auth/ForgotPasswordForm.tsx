@@ -86,7 +86,7 @@ export function ForgotPasswordForm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-2xl shadow-lift">
       <CardHeader>
         <CardTitle>{text.title}</CardTitle>
         <CardDescription>{text.description}</CardDescription>
@@ -109,7 +109,9 @@ export function ForgotPasswordForm({ locale }: { locale: Locale }) {
               {...register("email")}
             />
             {errors.email ? (
-              <p className="text-sm text-red-700">{errors.email.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.email.message}
+              </p>
             ) : null}
           </div>
 

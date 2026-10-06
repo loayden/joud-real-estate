@@ -199,9 +199,9 @@ export default async function PropertiesPage({
               return (
                 <Link
                   className={cn(
-                    "inline-flex h-10 items-center rounded-md border border-border px-4 text-sm font-bold transition-colors",
+                    "inline-flex min-h-11 items-center rounded-xl border border-border px-5 text-sm font-bold transition-colors",
                     active
-                      ? "bg-primary text-primary-foreground"
+                      ? "border-primary bg-primary text-primary-foreground shadow-xs"
                       : "bg-background hover:bg-muted",
                   )}
                   href={tabHref(searchParams, tab.value)}

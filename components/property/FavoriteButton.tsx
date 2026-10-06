@@ -15,6 +15,7 @@ import {
 import { Link, type Locale, usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-client";
+import { toast } from "@/components/shared/Toaster";
 
 type ApiResponse<T> =
   | { success: true; data: T }
@@ -24,6 +25,8 @@ const copy = {
   ar: {
     add: "إضافة إلى المفضلة",
     remove: "إزالة من المفضلة",
+    added: "تمت الإضافة إلى المفضلة",
+    removed: "تمت الإزالة من المفضلة",
     loginTitle: "سجّل الدخول لحفظ العقارات",
     loginDescription:
       "أنشئ قائمة مفضلة خاصة بك وارجع للعقارات المهمة في أي وقت.",
@@ -33,6 +36,8 @@ const copy = {
   en: {
     add: "Add to favorites",
     remove: "Remove from favorites",
+    added: "Added to favorites",
+    removed: "Removed from favorites",
     loginTitle: "Sign in to save properties",
     loginDescription:
       "Build your private favorites list and come back to important listings anytime.",
@@ -110,6 +115,7 @@ export function FavoriteButton({
 
       setFavorited(payload.data.favorited);
       onFavoriteChange?.(payload.data.favorited);
+      toast("success", payload.data.favorited ? text.added : text.removed);
       startTransition(() => router.refresh());
     } catch (favoriteError) {
       setFavorited(previous);
@@ -135,7 +141,8 @@ export function FavoriteButton({
             ? "h-10 gap-2 rounded-md px-4 text-sm font-semibold"
             : "rounded-full",
           compact ? "size-9" : !withLabel && "size-10",
-          favorited && "border-red-200 bg-red-50 text-red-600",
+          favorited &&
+            "border-destructive/30 bg-destructive/10 text-destructive",
           className,
         )}
         disabled={isPending || isSaving}

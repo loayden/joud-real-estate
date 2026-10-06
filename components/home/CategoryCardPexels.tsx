@@ -65,30 +65,30 @@ export function CategoryCardPexels({
 
   return (
     <Link
-      className="group relative min-h-48 overflow-hidden rounded-lg border border-border bg-card p-5 text-white shadow-subtle transition-all hover:-translate-y-0.5 hover:shadow-soft"
+      className="transition-lift group relative block min-h-48 overflow-hidden rounded-2xl border border-border bg-card text-white hover:-translate-y-1 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       href={href}
     >
       {image ? (
         <Image
           alt={image.alt}
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
           fill
-          sizes="(min-width: 1024px) 25vw, 100vw"
+          sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
           src={image.src}
         />
       ) : (
-        <div className="absolute inset-0 bg-primary" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-700 to-primary-900" />
       )}
-      <div className="from-primary-900/88 absolute inset-0 bg-gradient-to-t via-primary-900/40 to-primary-900/10" />
-      <div className="relative flex h-full flex-col justify-between gap-6">
-        <span className="grid size-11 place-items-center rounded-md bg-white/15 backdrop-blur">
+      <div className="absolute inset-0 bg-gradient-to-t from-primary-950/90 via-primary-950/35 to-primary-950/5" />
+      <div className="relative flex h-full min-h-48 flex-col justify-between gap-6 p-5">
+        <span className="glass-dark grid size-11 w-fit place-items-center rounded-xl">
           <Icon className="size-5" />
         </span>
         <div>
-          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold backdrop-blur">
+          <span className="tnum rounded-full bg-black/40 px-3 py-1 text-xs font-bold">
             {count} {countLabel}
           </span>
-          <div className="mt-3 text-xl font-bold">{name}</div>
+          <div className="mt-3 text-xl font-bold leading-snug">{name}</div>
         </div>
       </div>
     </Link>

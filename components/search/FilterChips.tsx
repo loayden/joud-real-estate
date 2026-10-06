@@ -145,7 +145,14 @@ export function FilterChips({
       nextChips.push({
         key: "region",
         label: `${text.region}: ${localize(region, locale)}`,
-        params: ["regionId", "region", "cityId", "city"],
+        params: [
+          "regionId",
+          "region",
+          "regionSlug",
+          "cityId",
+          "city",
+          "citySlug",
+        ],
       });
     }
 
@@ -153,7 +160,7 @@ export function FilterChips({
       nextChips.push({
         key: "city",
         label: `${text.city}: ${localize(city, locale)}`,
-        params: ["cityId", "city"],
+        params: ["cityId", "city", "citySlug"],
       });
     }
 
@@ -241,13 +248,13 @@ export function FilterChips({
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {chips.map((chip) => (
         <span
-          className="inline-flex h-9 max-w-full items-center gap-2 rounded-md border border-primary/15 bg-primary-50 px-3 text-sm font-bold text-primary"
+          className="inline-flex h-9 max-w-full items-center gap-1.5 rounded-full border border-primary/20 bg-primary-50 py-1 pe-1.5 ps-3 text-sm font-bold text-primary"
           key={chip.key}
         >
           <span className="truncate">{chip.label}</span>
           <button
             aria-label={`${text.remove} ${chip.label}`}
-            className="grid size-5 shrink-0 place-items-center rounded-sm transition-colors hover:bg-primary/10"
+            className="grid size-6 shrink-0 place-items-center rounded-full transition-colors hover:bg-primary/15"
             disabled={isPending}
             onClick={() => removeParams(chip.params)}
             type="button"
@@ -257,7 +264,7 @@ export function FilterChips({
         </span>
       ))}
       <button
-        className="h-9 rounded-md px-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="min-h-9 rounded-full px-3 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         disabled={isPending}
         onClick={() => {
           startTransition(() => {

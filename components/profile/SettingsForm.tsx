@@ -211,7 +211,7 @@ export function SettingsForm({
                 {...register("currentPassword")}
               />
               {errors.currentPassword ? (
-                <p className="text-sm text-red-700">
+                <p className="text-sm font-medium text-destructive">
                   {errors.currentPassword.message}
                 </p>
               ) : null}
@@ -226,7 +226,7 @@ export function SettingsForm({
                 {...register("newPassword")}
               />
               {errors.newPassword ? (
-                <p className="text-sm text-red-700">
+                <p className="text-sm font-medium text-destructive">
                   {errors.newPassword.message}
                 </p>
               ) : null}

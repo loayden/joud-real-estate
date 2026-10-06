@@ -99,7 +99,7 @@ export function DashboardSidebar({
 
   return (
     <aside className="border-b border-border bg-background lg:min-h-[calc(100vh-4rem)] lg:w-72 lg:border-b-0 lg:border-e">
-      <div className="sticky top-16 flex gap-1 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-visible lg:p-4">
+      <div className="snap-strip sticky top-16 flex gap-1 overflow-x-auto px-4 py-3 lg:flex-col lg:overflow-visible lg:p-4">
         <Link
           className="hidden items-center gap-2 rounded-lg bg-muted px-3 py-2.5 text-small font-medium text-foreground lg:flex"
           href="/dashboard"
@@ -120,9 +120,9 @@ export function DashboardSidebar({
               <Link
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "transition-colors-fast inline-flex h-10 items-center justify-center gap-2.5 rounded-lg px-3 text-small lg:justify-start",
+                  "transition-colors-fast inline-flex h-11 items-center justify-center gap-2.5 whitespace-nowrap rounded-xl px-4 text-small lg:justify-start",
                   active
-                    ? "bg-primary/8 font-medium text-primary"
+                    ? "bg-primary/10 font-semibold text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
                 href={item.href}
@@ -130,7 +130,7 @@ export function DashboardSidebar({
                 title={locale === "ar" ? item.labelAr : item.labelEn}
               >
                 <Icon className="size-4 shrink-0" />
-                <span className="hidden lg:inline">
+                <span className="whitespace-nowrap">
                   {locale === "ar" ? item.labelAr : item.labelEn}
                 </span>
                 {item.href === "/inquiries" && unreadInquiryCount > 0 ? (

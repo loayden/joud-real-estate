@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -36,6 +36,8 @@ const copy = {
     description: "ادخل إلى حسابك لإدارة عقاراتك واستفساراتك.",
     email: "البريد الإلكتروني",
     password: "كلمة المرور",
+    showPassword: "إظهار كلمة المرور",
+    hidePassword: "إخفاء كلمة المرور",
     submit: "تسجيل الدخول",
     loading: "جار تسجيل الدخول",
     forgot: "نسيت كلمة المرور؟",
@@ -51,6 +53,8 @@ const copy = {
     description: "Access your account to manage listings and inquiries.",
     email: "Email",
     password: "Password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     submit: "Login",
     loading: "Logging in",
     forgot: "Forgot password?",
@@ -74,6 +78,7 @@ export function LoginForm({
   const router = useRouter();
   const { token: csrfToken } = useCsrfToken();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(
     null,
   );
@@ -116,7 +121,7 @@ export function LoginForm({
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-2xl shadow-lift">
       <CardHeader>
         <CardTitle>{text.title}</CardTitle>
         <CardDescription>{text.description}</CardDescription>
@@ -125,6 +130,7 @@ export function LoginForm({
         <form
           className="grid gap-5"
           method="post"
+          noValidate
           onSubmit={handleSubmit(onSubmit)}
         >
           {serverError ? (
@@ -155,10 +161,18 @@ export function LoginForm({
               id="email"
               inputMode="email"
               type="email"
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? "email-error" : undefined}
               {...register("email")}
             />
             {errors.email ? (
-              <p className="text-sm text-red-700">{errors.email.message}</p>
+              <p
+                id="email-error"
+                role="alert"
+                className="text-sm font-medium text-destructive"
+              >
+                {errors.email.message}
+              </p>
             ) : null}
           </div>
 
@@ -166,24 +180,56 @@ export function LoginForm({
             <div className="flex items-center justify-between gap-4">
               <Label htmlFor="password">{text.password}</Label>
               <Link
-                className="text-sm font-semibold text-primary hover:text-primary-700"
+                className="rounded text-sm font-semibold text-primary hover:text-primary-700"
                 href="/forgot-password"
               >
                 {text.forgot}
               </Link>
             </div>
-            <Input
-              autoComplete="current-password"
-              id="password"
-              type="password"
-              {...register("password")}
-            />
+            <div className="relative">
+              <Input
+                autoComplete="current-password"
+                id="password"
+                type={showPassword ? "text" : "password"}
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={
+                  errors.password ? "password-error" : undefined
+                }
+                className="pe-12"
+                {...register("password")}
+              />
+              <button
+                type="button"
+                aria-label={
+                  showPassword ? text.hidePassword : text.showPassword
+                }
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((value) => !value)}
+                className="absolute end-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
             {errors.password ? (
-              <p className="text-sm text-red-700">{errors.password.message}</p>
+              <p
+                id="password-error"
+                role="alert"
+                className="text-sm font-medium text-destructive"
+              >
+                {errors.password.message}
+              </p>
             ) : null}
           </div>
 
-          <Button className="w-full" disabled={isSubmitting} type="submit">
+          <Button
+            className="h-12 w-full rounded-xl"
+            disabled={isSubmitting}
+            type="submit"
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />

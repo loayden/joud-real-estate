@@ -72,8 +72,10 @@ const filterKeys = [
   "listingType",
   "regionId",
   "region",
+  "regionSlug",
   "cityId",
   "city",
+  "citySlug",
   "categoryId",
   "typeId",
   "minPrice",
@@ -135,30 +137,43 @@ function SegmentedButtons({
   options,
   value,
   onChange,
+  columns = 5,
 }: {
   label: string;
   options: Array<{ label: string; value: string }>;
   value: string;
   onChange: (value: string) => void;
+  columns?: 3 | 5;
 }) {
   return (
     <div className="grid gap-2">
       <Label>{label}</Label>
-      <div className="grid grid-cols-5 gap-2">
-        {options.map((option) => (
-          <button
-            className={cn(
-              "h-10 rounded-md border border-border bg-background text-sm font-bold transition-colors hover:bg-muted",
-              value === option.value &&
-                "border-primary bg-primary text-primary-foreground hover:bg-primary-700",
-            )}
-            key={option.value || "any"}
-            onClick={() => onChange(option.value)}
-            type="button"
-          >
-            {option.label}
-          </button>
-        ))}
+      <div
+        className={cn(
+          "grid gap-2",
+          columns === 3 ? "grid-cols-3" : "grid-cols-5",
+        )}
+        role="group"
+        aria-label={label}
+      >
+        {options.map((option) => {
+          const selected = value === option.value;
+          return (
+            <button
+              aria-pressed={selected}
+              className={cn(
+                "tnum min-h-11 rounded-xl border border-border bg-background px-1 text-sm font-bold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                selected &&
+                  "border-primary bg-primary text-primary-foreground hover:bg-primary-700",
+              )}
+              key={option.value || "any"}
+              onClick={() => onChange(option.value)}
+              type="button"
+            >
+              {option.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -317,7 +332,7 @@ export function FilterSidebar({
   return (
     <div
       className={cn(
-        "grid gap-6 rounded-lg border border-border bg-background p-5 shadow-subtle",
+        "grid content-start gap-6 rounded-2xl border border-border bg-background p-5 shadow-xs",
         className,
       )}
     >
@@ -327,7 +342,7 @@ export function FilterSidebar({
           {text.title}
         </h2>
         <button
-          className="text-sm font-bold text-muted-foreground transition-colors hover:text-foreground"
+          className="min-h-9 rounded-lg px-2 text-sm font-bold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           disabled={isPending}
           onClick={clearFilters}
           type="button"
@@ -338,6 +353,7 @@ export function FilterSidebar({
 
       <SegmentedButtons
         label={text.listingType}
+        columns={3}
         onChange={setListingType}
         options={[
           { label: text.all, value: "" },
@@ -472,9 +488,15 @@ export function FilterSidebar({
         value={bathrooms}
       />
 
-      <Button className="h-11" disabled={isPending} onClick={applyFilters}>
-        {text.apply}
-      </Button>
+      <div className="sticky bottom-0 -mx-5 -mb-5 border-t border-border bg-background/95 p-5 backdrop-blur-sm">
+        <Button
+          className="h-12 w-full rounded-xl"
+          disabled={isPending}
+          onClick={applyFilters}
+        >
+          {text.apply}
+        </Button>
+      </div>
     </div>
   );
 }

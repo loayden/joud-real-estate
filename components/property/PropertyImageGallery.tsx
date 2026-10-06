@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ export function PropertyImageGallery({
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0];
 
   const move = useCallback(
@@ -78,51 +79,62 @@ export function PropertyImageGallery({
       if (event.key === "ArrowRight") move(1);
     }
 
+    // Lock background scroll while the lightbox is open
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+      // Return focus to the gallery trigger for keyboard users
+      triggerRef.current?.focus({ preventScroll: true });
+    };
   }, [closeLightbox, isLightboxOpen, move]);
 
   return (
     <section aria-label={title} className="grid gap-3">
       <button
-        className="group relative aspect-[16/10] overflow-hidden rounded-lg bg-muted text-start"
+        ref={triggerRef}
+        className="transition-lift group relative aspect-[16/10] overflow-hidden rounded-2xl bg-muted text-start hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         onClick={openLightbox}
         type="button"
       >
         <Image
           alt={title}
-          className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
           fill
           priority
           sizes="(min-width: 1024px) 70vw, 100vw"
           src={activeImage.url}
         />
-        <span className="absolute bottom-4 end-4 inline-flex items-center gap-2 rounded-md bg-background/90 px-3 py-2 text-sm font-bold text-foreground shadow-subtle backdrop-blur">
+        <span className="tnum absolute bottom-4 end-4 inline-flex items-center gap-2 rounded-full bg-black/55 px-3.5 py-2 text-small font-bold text-white backdrop-blur-sm">
           <Maximize2 className="size-4" />
           {activeIndex + 1} / {galleryImages.length}
         </span>
       </button>
 
       {galleryImages.length > 1 ? (
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="snap-strip flex gap-2 overflow-x-auto pb-1">
           {galleryImages.map((image, index) => (
             <button
               aria-label={`${title} ${index + 1}`}
               aria-pressed={index === activeIndex}
               className={cn(
-                "relative h-20 w-28 shrink-0 overflow-hidden rounded-md border bg-muted",
+                "transition-all-fast relative h-20 w-28 shrink-0 overflow-hidden rounded-xl border-2 bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 index === activeIndex
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "border-border",
+                  ? "border-primary shadow-sm"
+                  : "border-transparent opacity-80 hover:opacity-100",
               )}
               key={image.id}
               onClick={() => selectImage(index)}
               type="button"
             >
               <Image
-                alt={`${title} ${index + 1}`}
+                alt=""
+                aria-hidden
                 className="object-cover"
                 fill
+                loading="lazy"
                 sizes="112px"
                 src={image.thumbnailUrl}
               />
@@ -134,13 +146,13 @@ export function PropertyImageGallery({
       {isLightboxOpen ? (
         <div
           aria-modal="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-black/90 p-4"
+          className="fixed inset-0 z-50 grid animate-fade-in place-items-center bg-black/90 p-4"
           role="dialog"
         >
           <h2 className="sr-only">{title}</h2>
           <Button
             aria-label="Close"
-            className="absolute end-4 top-4"
+            className="absolute end-4 top-4 size-11 rounded-full"
             onClick={closeLightbox}
             size="icon"
             type="button"
@@ -150,7 +162,7 @@ export function PropertyImageGallery({
           </Button>
           <Button
             aria-label="Previous image"
-            className="absolute start-4 top-1/2 -translate-y-1/2"
+            className="absolute start-4 top-1/2 size-11 -translate-y-1/2 rounded-full"
             onClick={() => move(-1)}
             size="icon"
             type="button"
@@ -170,7 +182,7 @@ export function PropertyImageGallery({
           </div>
           <Button
             aria-label="Next image"
-            className="absolute end-4 top-1/2 -translate-y-1/2"
+            className="absolute end-4 top-1/2 size-11 -translate-y-1/2 rounded-full"
             onClick={() => move(1)}
             size="icon"
             type="button"
@@ -179,7 +191,7 @@ export function PropertyImageGallery({
             <ChevronLeft className="size-5 rtl:hidden" />
             <ChevronRight className="hidden size-5 rtl:block" />
           </Button>
-          <div className="absolute bottom-4 rounded-md bg-background/90 px-3 py-2 text-sm font-bold text-foreground">
+          <div className="tnum absolute bottom-4 rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-md">
             {activeIndex + 1} / {galleryImages.length}
           </div>
         </div>

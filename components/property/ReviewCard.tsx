@@ -207,7 +207,7 @@ export function ReviewCard({
         <p
           className={cn(
             "text-sm font-semibold",
-            message === text.saved ? "text-emerald-700" : "text-red-700",
+            message === text.saved ? "text-success" : "text-destructive",
           )}
         >
           {message}

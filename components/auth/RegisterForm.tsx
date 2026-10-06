@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -37,6 +37,8 @@ const copy = {
     phone: "رقم الجوال",
     email: "البريد الإلكتروني",
     password: "كلمة المرور",
+    showPassword: "إظهار كلمة المرور",
+    hidePassword: "إخفاء كلمة المرور",
     submit: "إنشاء الحساب",
     loading: "جار إنشاء الحساب",
     hasAccount: "لديك حساب بالفعل؟",
@@ -57,6 +59,8 @@ const copy = {
     phone: "Phone",
     email: "Email",
     password: "Password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
     submit: "Create account",
     loading: "Creating account",
     hasAccount: "Already have an account?",
@@ -87,6 +91,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
   );
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
   const {
     formState: { errors, isSubmitting },
     handleSubmit,
@@ -146,7 +151,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
 
   if (isComplete) {
     return (
-      <Card className="w-full">
+      <Card className="w-full rounded-2xl shadow-lift">
         <CardHeader>
           <CardTitle>{text.title}</CardTitle>
           <CardDescription>{text.description}</CardDescription>
@@ -179,7 +184,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-2xl shadow-lift">
       <CardHeader>
         <CardTitle>{text.title}</CardTitle>
         <CardDescription>{text.description}</CardDescription>
@@ -203,7 +208,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
                 {...register("firstName")}
               />
               {errors.firstName ? (
-                <p className="text-sm text-red-700">
+                <p className="text-sm font-medium text-destructive">
                   {errors.firstName.message}
                 </p>
               ) : null}
@@ -217,7 +222,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
                 {...register("lastName")}
               />
               {errors.lastName ? (
-                <p className="text-sm text-red-700">
+                <p className="text-sm font-medium text-destructive">
                   {errors.lastName.message}
                 </p>
               ) : null}
@@ -233,7 +238,9 @@ export function RegisterForm({ locale }: { locale: Locale }) {
               {...register("phone")}
             />
             {errors.phone ? (
-              <p className="text-sm text-red-700">{errors.phone.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.phone.message}
+              </p>
             ) : null}
           </div>
 
@@ -247,20 +254,42 @@ export function RegisterForm({ locale }: { locale: Locale }) {
               {...register("email")}
             />
             {errors.email ? (
-              <p className="text-sm text-red-700">{errors.email.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.email.message}
+              </p>
             ) : null}
           </div>
 
           <div className="grid gap-2">
             <Label htmlFor="password">{text.password}</Label>
-            <Input
-              autoComplete="new-password"
-              id="password"
-              type="password"
-              {...register("password")}
-            />
+            <div className="relative">
+              <Input
+                autoComplete="new-password"
+                id="password"
+                type={showPassword ? "text" : "password"}
+                className="pe-12"
+                {...register("password")}
+              />
+              <button
+                type="button"
+                aria-label={
+                  showPassword ? text.hidePassword : text.showPassword
+                }
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((value) => !value)}
+                className="absolute end-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
             {errors.password ? (
-              <p className="text-sm text-red-700">{errors.password.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.password.message}
+              </p>
             ) : null}
           </div>
 
@@ -279,7 +308,11 @@ export function RegisterForm({ locale }: { locale: Locale }) {
             />
           ) : null}
 
-          <Button className="w-full" disabled={isSubmitting} type="submit">
+          <Button
+            className="h-12 w-full rounded-xl"
+            disabled={isSubmitting}
+            type="submit"
+          >
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />

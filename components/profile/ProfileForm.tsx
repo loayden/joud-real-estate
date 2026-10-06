@@ -197,7 +197,7 @@ export function ProfileForm({
               <Label htmlFor="firstName">{text.firstName}</Label>
               <Input id="firstName" {...register("firstName")} />
               {errors.firstName ? (
-                <p className="text-sm text-red-700">
+                <p className="text-sm font-medium text-destructive">
                   {errors.firstName.message}
                 </p>
               ) : null}
@@ -206,7 +206,7 @@ export function ProfileForm({
               <Label htmlFor="lastName">{text.lastName}</Label>
               <Input id="lastName" {...register("lastName")} />
               {errors.lastName ? (
-                <p className="text-sm text-red-700">
+                <p className="text-sm font-medium text-destructive">
                   {errors.lastName.message}
                 </p>
               ) : null}
@@ -222,7 +222,9 @@ export function ProfileForm({
               <Label htmlFor="phone">{text.phone}</Label>
               <Input id="phone" inputMode="tel" {...register("phone")} />
               {errors.phone ? (
-                <p className="text-sm text-red-700">{errors.phone.message}</p>
+                <p className="text-sm font-medium text-destructive">
+                  {errors.phone.message}
+                </p>
               ) : null}
             </div>
           </div>
@@ -231,7 +233,9 @@ export function ProfileForm({
             <Label htmlFor="whatsapp">{text.whatsapp}</Label>
             <Input id="whatsapp" inputMode="tel" {...register("whatsapp")} />
             {errors.whatsapp ? (
-              <p className="text-sm text-red-700">{errors.whatsapp.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.whatsapp.message}
+              </p>
             ) : null}
           </div>
 
@@ -244,7 +248,9 @@ export function ProfileForm({
               showNeighborhood={false}
             />
             {errors.cityId ? (
-              <p className="text-sm text-red-700">{errors.cityId.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.cityId.message}
+              </p>
             ) : null}
           </div>
 
@@ -252,7 +258,9 @@ export function ProfileForm({
             <Label htmlFor="bio">{text.bio}</Label>
             <Textarea id="bio" {...register("bio")} />
             {errors.bio ? (
-              <p className="text-sm text-red-700">{errors.bio.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.bio.message}
+              </p>
             ) : null}
           </div>
 

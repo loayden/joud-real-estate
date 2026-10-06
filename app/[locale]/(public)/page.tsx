@@ -1,10 +1,9 @@
 import {
-  ArrowUpLeft,
+  ArrowUpRight,
   Building2,
   Search,
   Shield,
   MapPin,
-  TrendingUp,
   Users,
   CheckCircle,
   Home,
@@ -16,6 +15,7 @@ import { CategoryCardPexels } from "@/components/home/CategoryCardPexels";
 import { HeroPexels } from "@/components/home/HeroPexels";
 import { RecentlyViewed } from "@/components/property/RecentlyViewed";
 import { PropertyGrid } from "@/components/property/PropertyGrid";
+import { Reveal } from "@/components/shared/Reveal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, type Locale } from "@/i18n/routing";
@@ -46,6 +46,8 @@ const copy = {
     categoryCount: "عقار",
     statsProperties: "عقار",
     statsCities: "مدينة",
+    statsCategories: "تصنيف",
+    statsFeatured: "عقار مميز",
     popularAreas: "المناطق الأكثر طلباً",
     popularAreasDesc: "اكتشف أكثر المناطق شعبية في مصر",
     trustTitle: "لماذا جود العقارية؟",
@@ -75,6 +77,10 @@ const copy = {
     noFeatured: "No featured listings yet.",
     noLatest: "No published listings yet.",
     categoryCount: "properties",
+    statsProperties: "properties",
+    statsCities: "cities",
+    statsCategories: "categories",
+    statsFeatured: "featured",
     popularAreas: "Most Popular Areas",
     popularAreasDesc: "Discover the most sought-after areas in Egypt",
     trustTitle: "Why Joud Real Estate?",
@@ -264,52 +270,58 @@ export default async function HomePage({
       {/* Hero */}
       <section className="relative isolate overflow-hidden bg-primary-900 text-white">
         <HeroPexels photos={heroImages} />
-        <div className="absolute inset-0 bg-primary-900/55" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(13,36,68,0.88),rgba(13,36,68,0.32),rgba(13,36,68,0.12))]" />
-        <div className="relative mx-auto flex min-h-[560px] w-full max-w-7xl items-center px-4 py-16 sm:px-6 lg:px-8">
+        <div className="absolute inset-0 bg-primary-950/45" />
+        {/* Direction-aware legibility gradient: weighted toward the text side */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-950/85 via-primary-950/45 to-primary-950/10 rtl:bg-gradient-to-l" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-primary-950/60 to-transparent" />
+        <div className="relative mx-auto flex min-h-[540px] w-full max-w-7xl items-center px-4 py-16 sm:px-6 md:min-h-[600px] lg:px-8">
           <div className="max-w-3xl">
-            <div className="bg-white/8 mb-6 inline-flex items-center gap-2 rounded-lg border border-white/15 px-3.5 py-2 text-small font-medium text-white/80 backdrop-blur-sm">
+            <div className="glass-dark mb-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-small font-medium text-white/90">
               <Building2 className="size-4 text-gold-300" />
               {text.heroEyebrow}
             </div>
             <h1
               className="text-balance font-bold text-white"
               style={{
-                fontSize: "clamp(2.5rem, 5vw, 3.75rem)",
-                lineHeight: 1.1,
+                fontSize: "clamp(2.5rem, 5vw + 1rem, 4rem)",
+                lineHeight: 1.08,
                 letterSpacing: "-0.02em",
               }}
             >
               {site("name")}
             </h1>
-            <p className="mt-5 max-w-2xl text-body-lg text-white/70">
+            <p className="mt-5 max-w-2xl text-body-lg text-white/75">
               {site("tagline")}
             </p>
 
             <form
               action={`/${locale}/properties`}
-              className="mt-8 flex max-w-2xl flex-col gap-3 rounded-xl bg-white p-2 shadow-lg sm:flex-row"
+              className="mt-8 flex max-w-2xl flex-col gap-2 rounded-2xl border border-white/40 bg-white/95 p-2 shadow-lift backdrop-blur-md transition-shadow focus-within:shadow-glow focus-within:ring-2 focus-within:ring-gold/60 sm:flex-row sm:items-center"
             >
+              <label htmlFor="hero-search" className="sr-only">
+                {text.searchPlaceholder}
+              </label>
               <Input
                 aria-label={text.searchPlaceholder}
-                className="h-12 border-transparent text-foreground"
+                className="h-12 border-transparent bg-transparent text-foreground shadow-none focus-visible:ring-0"
+                id="hero-search"
                 name="q"
                 placeholder={text.searchPlaceholder}
               />
-              <Button className="h-12 shrink-0 px-6" type="submit">
+              <Button className="h-12 shrink-0 rounded-xl px-7" type="submit">
                 <Search className="size-4" />
                 {site("primaryCta")}
               </Button>
             </form>
 
             <div className="mt-4 flex flex-wrap gap-2.5">
-              <Button asChild variant="gold" size="sm">
+              <Button asChild variant="gold" size="sm" className="rounded-full">
                 <Link href="/properties?listingType=SALE">{text.sale}</Link>
               </Button>
               <Button
                 asChild
                 size="sm"
-                className="bg-white/8 border-white/20 text-white hover:bg-white/15"
+                className="rounded-full border-white/25 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
               >
                 <Link href="/properties?listingType=RENT">{text.rent}</Link>
               </Button>
@@ -320,122 +332,131 @@ export default async function HomePage({
 
       {/* Stats — clean, data-driven */}
       <section className="border-b border-border bg-background">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-px sm:grid-cols-4">
+        <dl className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-px sm:grid-cols-4">
           <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
-            <div className="grid size-10 place-items-center rounded-lg bg-primary-50 text-primary">
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary">
               <Home className="size-5" />
             </div>
-            <div>
-              <p
-                className="font-bold text-foreground"
+            <div className="min-w-0">
+              <dt className="sr-only">{text.statsProperties}</dt>
+              <dd
+                className="tnum font-bold text-foreground"
                 style={{ fontSize: "1.5rem", lineHeight: 1.2 }}
               >
                 {totalProperties.toLocaleString(
                   locale === "ar" ? "ar-EG" : "en-US",
                 )}
-              </p>
-              <p className="text-caption text-muted-foreground">
+              </dd>
+              <dd className="truncate text-caption text-muted-foreground">
                 {locale === "ar"
                   ? arabicUnit(totalProperties, unitForms.ar.properties)
                   : totalProperties === 1
                     ? "property"
                     : "properties"}
-              </p>
+              </dd>
             </div>
           </div>
           <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
-            <div className="grid size-10 place-items-center rounded-lg bg-primary-50 text-primary">
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary-50 text-primary">
               <MapPin className="size-5" />
             </div>
-            <div>
-              <p
-                className="font-bold text-foreground"
+            <div className="min-w-0">
+              <dt className="sr-only">{text.statsCities}</dt>
+              <dd
+                className="tnum font-bold text-foreground"
                 style={{ fontSize: "1.5rem", lineHeight: 1.2 }}
               >
                 {cities.length.toLocaleString(
                   locale === "ar" ? "ar-EG" : "en-US",
                 )}
-              </p>
-              <p className="text-caption text-muted-foreground">
+              </dd>
+              <dd className="truncate text-caption text-muted-foreground">
                 {locale === "ar"
                   ? arabicUnit(cities.length, unitForms.ar.cities)
                   : cities.length === 1
                     ? "city"
                     : "cities"}
-              </p>
+              </dd>
             </div>
           </div>
           <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
-            <div className="grid size-10 place-items-center rounded-lg bg-success/10 text-success">
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold-700">
+              <Building2 className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <dt className="sr-only">{text.statsCategories}</dt>
+              <dd
+                className="tnum font-bold text-foreground"
+                style={{ fontSize: "1.5rem", lineHeight: 1.2 }}
+              >
+                {categories.length.toLocaleString(
+                  locale === "ar" ? "ar-EG" : "en-US",
+                )}
+              </dd>
+              <dd className="truncate text-caption text-muted-foreground">
+                {text.statsCategories}
+              </dd>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
+            <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-success/10 text-success">
               <Shield className="size-5" />
             </div>
-            <div>
-              <p
-                className="font-bold text-foreground"
+            <div className="min-w-0">
+              <dt className="sr-only">{text.statsFeatured}</dt>
+              <dd
+                className="tnum font-bold text-foreground"
                 style={{ fontSize: "1.5rem", lineHeight: 1.2 }}
               >
-                {text.verified}
-              </p>
-              <p className="text-caption text-muted-foreground">
-                {text.responseTimeValue}
-              </p>
+                {featured.length.toLocaleString(
+                  locale === "ar" ? "ar-EG" : "en-US",
+                )}
+              </dd>
+              <dd className="truncate text-caption text-muted-foreground">
+                {text.statsFeatured}
+              </dd>
             </div>
           </div>
-          <div className="flex items-center gap-3 px-4 py-5 sm:gap-4 sm:px-6 sm:py-6">
-            <div className="grid size-10 place-items-center rounded-lg bg-gold/10 text-gold">
-              <TrendingUp className="size-5" />
-            </div>
-            <div>
-              <p
-                className="font-bold text-foreground"
-                style={{ fontSize: "1.5rem", lineHeight: 1.2 }}
-              >
-                {text.responseTime}
-              </p>
-              <p className="text-caption text-muted-foreground">
-                {text.responseTimeValue}
-              </p>
-            </div>
-          </div>
-        </div>
+        </dl>
       </section>
 
       {/* Categories */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-6">
+      <section className="content-auto mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <Reveal className="mb-6">
           <h2 className="text-h2">{text.categories}</h2>
-        </div>
+        </Reveal>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((category, index) => {
             const iconKey = categoryIcons[index] ?? "home";
             return (
-              <CategoryCardPexels
-                count={category.count}
-                countLabel={text.categoryCount}
-                href={`/properties?categoryId=${category.id}`}
-                iconKey={iconKey}
-                image={categoryImageBySlug.get(category.slug) ?? null}
-                key={category.id}
-                name={getCategoryName(category, locale)}
-                slug={category.slug}
-              />
+              <Reveal key={category.id} delay={index * 60}>
+                <CategoryCardPexels
+                  count={category.count}
+                  countLabel={text.categoryCount}
+                  href={`/properties?categoryId=${category.id}`}
+                  iconKey={iconKey}
+                  image={categoryImageBySlug.get(category.slug) ?? null}
+                  name={getCategoryName(category, locale)}
+                  slug={category.slug}
+                />
+              </Reveal>
             );
           })}
         </div>
       </section>
 
       {/* Featured */}
-      <section className="border-y border-border bg-muted/30">
+      <section className="content-auto border-y border-border bg-muted/30">
         <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
+          <Reveal className="flex items-center justify-between gap-4">
             <h2 className="text-h2">{text.featured}</h2>
             <Button asChild variant="secondary" size="sm">
               <Link href="/properties">
                 {text.allProperties}
-                <ArrowUpLeft className="size-4" />
+                <ArrowUpRight className="size-4 rtl:-scale-x-100" />
               </Link>
             </Button>
-          </div>
+          </Reveal>
           {featured.length > 0 ? (
             <PropertyGrid
               favoriteIds={favoriteIds}
@@ -452,43 +473,44 @@ export default async function HomePage({
       </section>
 
       {/* Popular Areas */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-6">
+      <section className="content-auto mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <Reveal className="mb-6">
           <h2 className="text-h2">{text.popularAreas}</h2>
           <p className="mt-1 text-body text-muted-foreground">
             {text.popularAreasDesc}
           </p>
-        </div>
+        </Reveal>
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-          {popularAreas.map((area) => (
-            <Link
-              key={area.slug}
-              href={`/area/${area.slug}`}
-              className="transition-all-fast group flex items-center justify-between rounded-xl border border-border bg-background px-4 py-3.5 hover:border-primary/40 hover:bg-primary-50/50"
-            >
-              <div className="flex items-center gap-3">
-                <div className="transition-colors-fast grid size-9 place-items-center rounded-lg bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white">
-                  <MapPin className="size-4" />
+          {popularAreas.map((area, areaIndex) => (
+            <Reveal key={area.slug} delay={Math.min(areaIndex, 4) * 40}>
+              <Link
+                href={`/area/${area.slug}`}
+                className="transition-lift group flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3.5 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="transition-colors-fast grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white">
+                    <MapPin className="size-4" />
+                  </div>
+                  <p className="truncate text-body font-medium">
+                    {locale === "ar" ? area.nameAr : area.nameEn}
+                  </p>
                 </div>
-                <p className="text-body font-medium">
-                  {locale === "ar" ? area.nameAr : area.nameEn}
-                </p>
-              </div>
-              <ArrowUpLeft className="transition-colors-fast size-4 text-muted-foreground/50 group-hover:text-primary" />
-            </Link>
+                <ArrowUpRight className="transition-colors-fast size-4 shrink-0 text-muted-foreground/50 group-hover:text-primary rtl:-scale-x-100" />
+              </Link>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* Latest */}
-      <section className="border-y border-border bg-muted/30">
+      <section className="content-auto border-y border-border bg-muted/30">
         <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4">
+          <Reveal className="flex items-center justify-between gap-4">
             <h2 className="text-h2">{text.latest}</h2>
             <Button asChild variant="secondary" size="sm">
               <Link href="/properties">{text.allProperties}</Link>
             </Button>
-          </div>
+          </Reveal>
           {latest.length > 0 ? (
             <PropertyGrid
               favoriteIds={favoriteIds}
@@ -505,43 +527,51 @@ export default async function HomePage({
       </section>
 
       {/* Trust */}
-      <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-10 text-center">
+      <section className="content-auto mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <Reveal className="mb-10 text-center">
           <h2 className="text-h2">{text.trustTitle}</h2>
-        </div>
-        <div className="grid gap-8 sm:grid-cols-3">
-          <div className="text-center">
-            <div className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-primary-50 text-primary">
-              <Shield className="size-6" />
-            </div>
-            <h3 className="mb-2 text-h4">{text.trust1Title}</h3>
-            <p className="text-body text-muted-foreground">{text.trust1Desc}</p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-primary-50 text-primary">
-              <CheckCircle className="size-6" />
-            </div>
-            <h3 className="mb-2 text-h4">{text.trust2Title}</h3>
-            <p className="text-body text-muted-foreground">{text.trust2Desc}</p>
-          </div>
-          <div className="text-center">
-            <div className="mx-auto mb-4 grid size-12 place-items-center rounded-xl bg-primary-50 text-primary">
-              <Users className="size-6" />
-            </div>
-            <h3 className="mb-2 text-h4">{text.trust3Title}</h3>
-            <p className="text-body text-muted-foreground">{text.trust3Desc}</p>
-          </div>
+        </Reveal>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { Icon: Shield, title: text.trust1Title, desc: text.trust1Desc },
+            {
+              Icon: CheckCircle,
+              title: text.trust2Title,
+              desc: text.trust2Desc,
+            },
+            { Icon: Users, title: text.trust3Title, desc: text.trust3Desc },
+          ].map(({ Icon, title, desc }, trustIndex) => (
+            <Reveal
+              key={title}
+              delay={trustIndex * 70}
+              className="transition-lift rounded-2xl border border-border bg-card p-6 text-center shadow-xs hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="mx-auto mb-4 grid size-12 place-items-center rounded-2xl bg-primary-50 text-primary">
+                <Icon className="size-6" />
+              </div>
+              <h3 className="mb-2 text-h4">{title}</h3>
+              <p className="text-body text-muted-foreground">{desc}</p>
+            </Reveal>
+          ))}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="bg-foreground text-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
-          <h2 className="text-h2 text-white">{text.ctaTitle}</h2>
-          <p className="mt-3 text-body text-white/60">{text.ctaDesc}</p>
-          <Button asChild className="mt-8" size="lg">
-            <Link href="/properties">{text.ctaButton}</Link>
-          </Button>
+      <section className="relative isolate overflow-hidden bg-primary-950 text-white">
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(60%_120%_at_50%_0%,rgba(201,168,76,0.22),transparent_70%)]"
+        />
+        <div className="relative mx-auto max-w-7xl px-4 py-16 text-center sm:px-6 lg:px-8">
+          <Reveal>
+            <h2 className="text-h2 text-white">{text.ctaTitle}</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-body text-white/65">
+              {text.ctaDesc}
+            </p>
+            <Button asChild className="mt-8 h-12 rounded-xl px-8" size="lg">
+              <Link href="/properties">{text.ctaButton}</Link>
+            </Button>
+          </Reveal>
         </div>
       </section>
 

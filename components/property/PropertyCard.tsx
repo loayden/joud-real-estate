@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { ComparisonToggleButton } from "@/components/property/ComparisonDrawer";
 import { FavoriteButton } from "@/components/property/FavoriteButton";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { PropertyListItem } from "@/lib/property-listing";
 import { Link, type Locale } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -91,40 +92,46 @@ export function PropertyCard({
   return (
     <article
       className={cn(
-        "transition-all-fast group overflow-hidden rounded-xl border border-border bg-card hover:shadow-md",
-        isList && "grid md:grid-cols-[300px_1fr]",
+        "transition-lift group overflow-hidden rounded-2xl border border-border bg-card shadow-xs hover:-translate-y-1 hover:border-primary/25 hover:shadow-lift",
+        isList && "grid sm:grid-cols-[280px_1fr]",
       )}
     >
       {/* Image */}
       <div
         className={cn(
           "relative overflow-hidden bg-muted",
-          isList ? "aspect-[4/3] md:aspect-auto" : "aspect-[4/3]",
+          isList ? "aspect-[16/10] sm:aspect-auto sm:min-h-52" : "aspect-[4/3]",
         )}
       >
+        {/* Decorative image link — the title link below is the accessible one */}
         <Link
-          aria-label={title}
+          aria-hidden
           className="absolute inset-0"
           href={`/property/${property.slug}`}
+          tabIndex={-1}
         >
           <Image
-            alt={title}
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+            alt=""
+            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
             fill
             priority={priority}
             sizes={
               isList
-                ? "(min-width: 768px) 300px, 100vw"
-                : "(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 100vw"
+                ? "(min-width: 640px) 280px, 100vw"
+                : "(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
             }
             src={imageUrl}
           />
         </Link>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        />
 
         {/* Status badge */}
         <span
           className={cn(
-            "absolute start-3 top-3 rounded-md px-2.5 py-1 text-caption font-semibold text-white",
+            "tnum absolute start-3 top-3 rounded-full px-3 py-1 text-caption font-bold text-white shadow-sm",
             property.listingType === "SALE" ? "bg-success" : "bg-primary",
           )}
         >
@@ -133,12 +140,12 @@ export function PropertyCard({
 
         {/* Featured / Freshness badge */}
         {property.isFeatured ? (
-          <span className="absolute end-3 top-3 inline-flex items-center gap-1 rounded-md bg-gold px-2.5 py-1 text-caption font-semibold text-gold-foreground">
-            <Star className="size-3" />
+          <span className="absolute end-3 top-3 inline-flex items-center gap-1 rounded-full bg-gold px-3 py-1 text-caption font-bold text-gold-foreground shadow-sm">
+            <Star className="size-3 fill-current" />
             {text.featured}
           </span>
         ) : freshness ? (
-          <span className="absolute end-3 top-3 rounded-md bg-foreground/80 px-2.5 py-1 text-caption font-semibold text-white backdrop-blur-sm">
+          <span className="absolute end-3 top-3 rounded-full bg-black/55 px-3 py-1 text-caption font-bold text-white">
             {freshness}
           </span>
         ) : null}
@@ -146,7 +153,7 @@ export function PropertyCard({
         {/* Favorite */}
         {showFavoriteButton ? (
           <FavoriteButton
-            className="absolute bottom-3 end-3"
+            className="absolute bottom-3 end-3 shadow-md"
             compact
             initialFavorited={initialFavorited}
             locale={locale}
@@ -157,21 +164,21 @@ export function PropertyCard({
       </div>
 
       {/* Content */}
-      <div className="grid gap-3 p-4">
+      <div className="grid content-start gap-2.5 p-4 sm:p-5">
         {/* Price */}
-        <div className="text-h4 font-bold text-foreground">
+        <div className="tnum text-xl font-bold tracking-tight text-foreground">
           {formatPrice(property, locale)}
         </div>
 
         {/* Title */}
         <Link href={`/property/${property.slug}`}>
-          <h3 className="transition-colors-fast line-clamp-2 text-body font-medium text-foreground hover:text-primary">
+          <h3 className="transition-colors-fast line-clamp-2 text-pretty text-body font-medium leading-snug text-foreground hover:text-primary">
             {title}
           </h3>
         </Link>
 
         {/* Location */}
-        <div className="flex items-center gap-1.5 text-small text-muted-foreground">
+        <div className="flex min-w-0 items-center gap-1.5 text-small text-muted-foreground">
           <MapPin className="size-3.5 shrink-0 text-muted-foreground/60" />
           <span className="truncate">
             {localizeName(property.city, locale)}
@@ -180,22 +187,22 @@ export function PropertyCard({
           </span>
         </div>
 
-        {/* Specs — clean, no chips */}
-        <div className="flex items-center gap-3 text-small text-muted-foreground">
+        {/* Specs */}
+        <div className="tnum flex flex-wrap items-center gap-x-3 gap-y-1 text-small text-muted-foreground">
           {property.bedrooms !== null ? (
-            <span className="flex items-center gap-1">
+            <span className="inline-flex items-center gap-1">
               <BedDouble className="size-3.5" />
               {property.bedrooms} {text.beds}
             </span>
           ) : null}
           {property.bathrooms !== null ? (
-            <span className="flex items-center gap-1">
+            <span className="inline-flex items-center gap-1">
               <Bath className="size-3.5" />
               {property.bathrooms} {text.baths}
             </span>
           ) : null}
           {property.area ? (
-            <span className="flex items-center gap-1">
+            <span className="inline-flex items-center gap-1">
               <Maximize2 className="size-3.5" />
               {property.area} {text.areaUnit}
             </span>
@@ -204,7 +211,7 @@ export function PropertyCard({
 
         {/* Price per sqm */}
         {pricePerSqm ? (
-          <p className="text-caption text-muted-foreground">
+          <p className="tnum text-caption text-muted-foreground">
             {formatPrice({ ...property, price: pricePerSqm }, locale)}/
             {text.areaUnit}
           </p>
@@ -225,5 +232,33 @@ export function PropertyCard({
         </div>
       </div>
     </article>
+  );
+}
+
+export function PropertyCardSkeleton({
+  variant = "grid",
+}: {
+  variant?: "grid" | "list";
+}) {
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        "overflow-hidden rounded-2xl border border-border bg-card",
+        variant === "list" && "grid sm:grid-cols-[280px_1fr]",
+      )}
+    >
+      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+      <div className="grid content-start gap-3 p-4 sm:p-5">
+        <Skeleton className="h-7 w-2/3" />
+        <Skeleton className="h-5 w-full" />
+        <Skeleton className="h-5 w-4/5" />
+        <div className="flex gap-3">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -6,8 +6,10 @@ import { notFound } from "next/navigation";
 
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { OnboardingGate } from "@/components/onboarding/OnboardingOverlay";
 import { ComparisonDrawer } from "@/components/property/ComparisonDrawer";
+import { Toaster } from "@/components/shared/Toaster";
 import { locales, type Locale } from "@/i18n/routing";
 import { alternateLanguages, getSeoAppUrl, localizedUrl } from "@/lib/seo";
 
@@ -15,7 +17,7 @@ import "../globals.css";
 
 const arabicFont = IBM_Plex_Sans_Arabic({
   subsets: ["arabic"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-arabic",
 });
 
@@ -119,13 +121,17 @@ export default async function LocaleLayout({
               ? "تخطَّ إلى المحتوى الرئيسي"
               : "Skip to main content"}
           </a>
-          <div className="flex min-h-screen flex-col">
+          <div className="flex min-h-dvh flex-col">
             <Header />
             <main id="main-content" className="flex-1" tabIndex={-1}>
               {children}
             </main>
             <ComparisonDrawer locale={locale} />
             <Footer locale={locale} />
+            {/* Spacer so the mobile bottom nav never covers footer content */}
+            <div aria-hidden className="h-16 lg:hidden" />
+            <MobileBottomNav />
+            <Toaster />
             <OnboardingGate locale={locale} />
           </div>
         </NextIntlClientProvider>

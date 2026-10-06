@@ -39,6 +39,7 @@ const config: Config = {
           700: "#163D73",
           800: "#112F5B",
           900: "#0C2144",
+          950: "#081A36",
           DEFAULT: "#1B4B8A",
           foreground: "#FFFFFF",
         },
@@ -85,11 +86,13 @@ const config: Config = {
       boxShadow: {
         none: "none",
         xs: "0 1px 2px rgba(26,26,26,0.04)",
-        sm: "0 2px 8px rgba(26,26,26,0.06)",
-        md: "0 4px 16px rgba(26,26,26,0.08)",
-        lg: "0 8px 32px rgba(26,26,26,0.10)",
+        sm: "0 1px 2px rgba(26,26,26,0.05), 0 4px 16px rgba(26,26,26,0.06)",
+        md: "0 1px 2px rgba(26,26,26,0.05), 0 8px 24px rgba(26,26,26,0.08)",
+        lg: "0 2px 4px rgba(26,26,26,0.05), 0 16px 40px rgba(26,26,26,0.10)",
         soft: "0 8px 32px rgba(26,26,26,0.08)",
         subtle: "0 2px 8px rgba(26,26,26,0.06)",
+        lift: "0 2px 6px rgba(12,33,68,0.08), 0 16px 40px rgba(12,33,68,0.14)",
+        glow: "0 0 0 1px rgba(201,168,76,0.35), 0 8px 24px rgba(201,168,76,0.25)",
       },
       fontSize: {
         display: [
@@ -125,12 +128,26 @@ const config: Config = {
           from: { opacity: "0", transform: "scale(0.96)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
+        "reveal-up": {
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "pop-in": {
+          from: { opacity: "0", transform: "scale(0.92) translateY(8px)" },
+          to: { opacity: "1", transform: "scale(1) translateY(0)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.28s ease-out",
-        "slide-up": "slide-up 0.28s ease-out",
-        "slide-down": "slide-down 0.28s ease-out",
+        "slide-up": "slide-up 0.28s cubic-bezier(0.22,1,0.36,1)",
+        "slide-down": "slide-down 0.28s cubic-bezier(0.22,1,0.36,1)",
         "scale-in": "scale-in 0.18s ease-out",
+        shimmer: "shimmer 1.6s ease-in-out infinite",
+        "reveal-up": "reveal-up 0.5s cubic-bezier(0.22,1,0.36,1)",
+        "pop-in": "pop-in 0.32s cubic-bezier(0.34,1.3,0.64,1)",
       },
     },
   },

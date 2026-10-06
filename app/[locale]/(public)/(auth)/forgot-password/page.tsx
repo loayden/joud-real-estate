@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AuthShell } from "@/components/auth/AuthShell";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import type { Locale } from "@/i18n/routing";
 
@@ -25,8 +26,8 @@ export default function ForgotPasswordPage({
   params: { locale: Locale };
 }) {
   return (
-    <section className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md items-center px-4 py-12">
+    <AuthShell locale={locale}>
       <ForgotPasswordForm locale={locale} />
-    </section>
+    </AuthShell>
   );
 }

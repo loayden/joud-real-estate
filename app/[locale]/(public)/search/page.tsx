@@ -350,8 +350,8 @@ export default async function SearchPage({
             ].map((area) => (
               <Link
                 key={area.slug}
-                href={`/search?citySlug=${area.slug}`}
-                className="transition-all-fast inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-small text-muted-foreground hover:border-primary/40 hover:bg-primary-50/50 hover:text-foreground"
+                href={`/search?regionSlug=${area.slug}`}
+                className="transition-all-fast inline-flex min-h-9 items-center gap-1.5 rounded-full border border-border bg-background px-3.5 py-1.5 text-small text-muted-foreground hover:border-primary/40 hover:bg-primary-50/50 hover:text-foreground"
               >
                 <MapPin className="size-3" />
                 {area.label}
@@ -412,25 +412,35 @@ export default async function SearchPage({
               />
 
               {/* View toggle */}
-              <div className="flex items-center rounded-lg border border-border">
-                <a
+              <div
+                className="flex items-center rounded-xl border border-border bg-background p-1"
+                role="group"
+                aria-label={text.gridView}
+              >
+                <Link
+                  aria-label={text.gridView}
+                  aria-pressed={view === "grid"}
                   href={`/search?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(searchParams.toString())), view: "grid" }).toString()}`}
-                  className={`transition-colors-fast inline-flex items-center gap-1 px-3 py-2 text-caption font-medium ${view === "grid" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`transition-colors-fast inline-flex min-h-9 min-w-11 items-center justify-center gap-1 rounded-lg px-3 py-2 text-caption font-medium ${view === "grid" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <LayoutGrid className="size-3.5" />
-                </a>
-                <a
+                </Link>
+                <Link
+                  aria-label={text.listView}
+                  aria-pressed={view === "list"}
                   href={`/search?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(searchParams.toString())), view: "list" }).toString()}`}
-                  className={`transition-colors-fast inline-flex items-center gap-1 px-3 py-2 text-caption font-medium ${view === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`transition-colors-fast inline-flex min-h-9 min-w-11 items-center justify-center gap-1 rounded-lg px-3 py-2 text-caption font-medium ${view === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   {text.listView}
-                </a>
-                <a
+                </Link>
+                <Link
+                  aria-label={text.mapView}
+                  aria-pressed={view === "map"}
                   href={`/search?${new URLSearchParams({ ...Object.fromEntries(new URLSearchParams(searchParams.toString())), view: "map" }).toString()}`}
-                  className={`transition-colors-fast inline-flex items-center gap-1 px-3 py-2 text-caption font-medium ${view === "map" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`transition-colors-fast inline-flex min-h-9 min-w-11 items-center justify-center gap-1 rounded-lg px-3 py-2 text-caption font-medium ${view === "map" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Map className="size-3.5" />
-                </a>
+                </Link>
               </div>
             </div>
           </div>

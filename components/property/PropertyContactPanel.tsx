@@ -36,6 +36,7 @@ const copy = {
     owner: "مالك العقار",
     ownerDescription: "تواصل مباشرة مع صاحب الإعلان.",
     revealPhone: "إظهار الرقم",
+    call: "اتصال",
     whatsapp: "واتساب",
     noPhone: "لم يضف المالك رقم تواصل بعد.",
     inquiry: "إرسال استفسار",
@@ -55,6 +56,7 @@ const copy = {
     owner: "Property owner",
     ownerDescription: "Contact the listing owner directly.",
     revealPhone: "Show phone",
+    call: "Call",
     whatsapp: "WhatsApp",
     noPhone: "The owner has not added a contact number yet.",
     inquiry: "Send inquiry",
@@ -192,6 +194,34 @@ export function PropertyContactPanel({
 
   return (
     <div className="grid gap-4">
+      {/* Sticky mobile contact bar — sits above the bottom navigation */}
+      {owner.phone || whatsappHref ? (
+        <div
+          className="fixed inset-x-3 z-30 lg:hidden"
+          style={{ bottom: "calc(4.25rem + env(safe-area-inset-bottom))" }}
+        >
+          <div
+            className={`glass mx-auto grid max-w-md gap-2 rounded-2xl p-2 shadow-lift ${owner.phone && whatsappHref ? "grid-cols-2" : "grid-cols-1"}`}
+          >
+            {owner.phone ? (
+              <Button asChild className="h-11 rounded-xl">
+                <a href={`tel:${owner.phone.replace(/\s/g, "")}`}>
+                  <Phone className="size-4" />
+                  {text.call}
+                </a>
+              </Button>
+            ) : null}
+            {whatsappHref ? (
+              <Button asChild variant="success" className="h-11 rounded-xl">
+                <a href={whatsappHref} rel="noreferrer" target="_blank">
+                  <MessageCircle className="size-4" />
+                  {text.whatsapp}
+                </a>
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
       <Card>
         <CardHeader>
           <CardTitle>{text.owner}</CardTitle>

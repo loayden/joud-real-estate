@@ -21,7 +21,11 @@
     "logout": "Logout",
     "login": "Login",
     "register": "Register",
-    "menu": "Menu"
+    "menu": "Menu",
+    "add": "Add listing",
+    "favorites": "Favorites",
+    "account": "Account",
+    "primary": "Primary navigation"
   },
   "common": {
     "save": "Save",

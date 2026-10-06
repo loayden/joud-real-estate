@@ -1,7 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import { Home, RefreshCw } from "lucide-react";
+import { Home, RefreshCw, TriangleAlert } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useEffect } from "react";
 
@@ -40,23 +40,42 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <section className="mx-auto flex min-h-[70vh] w-full max-w-3xl flex-col items-center justify-center px-4 text-center">
-      <p className="text-sm font-bold text-gold-700">500</p>
-      <h1 className="mt-3 text-3xl font-bold text-primary sm:text-4xl">
-        {text.title}
-      </h1>
-      <p className="mt-4 max-w-xl text-muted-foreground">{text.description}</p>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <Button onClick={reset} type="button">
-          <RefreshCw className="h-4 w-4" />
-          {text.retry}
-        </Button>
-        <Button asChild type="button" variant="secondary">
-          <Link href="/">
-            <Home className="h-4 w-4" />
-            {text.home}
-          </Link>
-        </Button>
+    <section className="relative isolate overflow-hidden">
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-[radial-gradient(60%_50%_at_50%_20%,rgba(196,54,42,0.08),transparent_70%)]"
+      />
+      <div className="mx-auto flex min-h-[70dvh] w-full max-w-3xl animate-slide-up flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
+        <span className="grid size-16 place-items-center rounded-3xl bg-destructive/10 text-destructive">
+          <TriangleAlert className="size-8" />
+        </span>
+        <h1 className="mt-6 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          {text.title}
+        </h1>
+        <p className="mt-4 max-w-xl text-body text-muted-foreground">
+          {text.description}
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Button
+            onClick={reset}
+            type="button"
+            className="h-11 rounded-xl px-6"
+          >
+            <RefreshCw className="size-4" />
+            {text.retry}
+          </Button>
+          <Button
+            asChild
+            type="button"
+            variant="secondary"
+            className="h-11 rounded-xl px-6"
+          >
+            <Link href="/">
+              <Home className="size-4" />
+              {text.home}
+            </Link>
+          </Button>
+        </div>
       </div>
     </section>
   );

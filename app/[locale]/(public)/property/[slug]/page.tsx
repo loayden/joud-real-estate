@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { CheckCircle2, MapPin, Star } from "lucide-react";
 
@@ -6,7 +7,6 @@ import { FavoriteButton } from "@/components/property/FavoriteButton";
 import { MortgageCalculator } from "@/components/property/MortgageCalculator";
 import { NeighbourhoodScore } from "@/components/property/NeighbourhoodScore";
 import { PriceAlertButton } from "@/components/property/PriceAlertButton";
-import { PriceHistoryChart } from "@/components/property/PriceHistoryChart";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { PropertyContactPanel } from "@/components/property/PropertyContactPanel";
 import { PropertyEstimate } from "@/components/property/PropertyEstimate";
@@ -19,7 +19,8 @@ import { SellerScoreBadge } from "@/components/property/SellerScoreBadge";
 import { ShareButton } from "@/components/property/ShareButton";
 import { VirtualTourEmbed } from "@/components/property/VirtualTourEmbed";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Locale } from "@/i18n/routing";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Link, type Locale } from "@/i18n/routing";
 import { auth } from "@/lib/auth";
 import { getFavoritePropertyIds } from "@/lib/favorites";
 import {
@@ -29,6 +30,26 @@ import {
 import { absoluteUrl, alternateLanguages, getSeoAppUrl } from "@/lib/seo";
 
 export const revalidate = 3600;
+
+// recharts is heavy (~300kb) and sits below the fold — split it out.
+const PriceHistoryChart = dynamic(
+  () =>
+    import("@/components/property/PriceHistoryChart").then(
+      (module) => module.PriceHistoryChart,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        aria-hidden
+        className="grid gap-3 rounded-2xl border border-border bg-card p-5"
+      >
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-44 w-full" />
+      </div>
+    ),
+  },
+);
 
 const copy = {
   ar: {
@@ -192,6 +213,10 @@ export default async function PropertyDetailPage({
   const title = localizePropertyTitle(property, locale);
   const description = localizePropertyDescription(property, locale);
   const price = formatCurrency(property.price, property.currency, locale);
+  const crumbs = [
+    { label: locale === "ar" ? "الرئيسية" : "Home", href: "/" },
+    { label: locale === "ar" ? "العقارات" : "Properties", href: "/properties" },
+  ];
   const propertyUrl = `${getSeoAppUrl()}/${locale}/property/${property.slug}`;
   const profile = property.user.profile;
   const ownerName =
@@ -325,7 +350,30 @@ export default async function PropertyDetailPage({
       <article className="bg-background">
         {/* Header */}
         <section className="border-b border-border">
-          <div className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mx-auto grid w-full max-w-7xl gap-5 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+            <nav aria-label="Breadcrumb">
+              <ol className="flex min-w-0 flex-wrap items-center gap-1.5 text-small text-muted-foreground">
+                {crumbs.map((crumb) => (
+                  <li key={crumb.href} className="flex items-center gap-1.5">
+                    <Link
+                      href={crumb.href}
+                      className="transition-colors-fast rounded hover:text-foreground hover:underline"
+                    >
+                      {crumb.label}
+                    </Link>
+                    <span aria-hidden className="text-border">
+                      /
+                    </span>
+                  </li>
+                ))}
+                <li
+                  aria-current="page"
+                  className="min-w-0 truncate text-foreground"
+                >
+                  {title}
+                </li>
+              </ol>
+            </nav>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-md bg-primary px-2.5 py-1 text-caption font-semibold text-primary-foreground">
                 {property.listingType === "SALE" ? text.sale : text.rent}
@@ -345,7 +393,9 @@ export default async function PropertyDetailPage({
                   <span>{location}</span>
                 </p>
               </div>
-              <div className="text-h2 font-bold text-foreground">{price}</div>
+              <div className="tnum text-h2 font-bold tracking-tight text-foreground">
+                {price}
+              </div>
             </div>
           </div>
         </section>
@@ -413,7 +463,7 @@ export default async function PropertyDetailPage({
             {similar.length > 0 ? (
               <section className="grid gap-5">
                 <h2 className="text-h3 text-foreground">{text.similar}</h2>
-                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="grid gap-5 min-[560px]:grid-cols-2">
                   {similar.map((item) => (
                     <PropertyCard
                       key={item.id}

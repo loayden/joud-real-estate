@@ -106,7 +106,9 @@ export function ComparisonToggleButton({
         {active ? text.remove : text.compare}
       </Button>
       {message ? (
-        <span className="text-xs font-semibold text-red-700">{message}</span>
+        <span className="text-xs font-semibold text-destructive" role="status">
+          {message}
+        </span>
       ) : null}
     </div>
   );
@@ -142,7 +144,7 @@ export function ComparisonDrawer({ locale }: { locale: Locale }) {
 
   return (
     <div
-      className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-3xl rounded-lg border border-border bg-background p-3 shadow-soft"
+      className="fixed inset-x-3 bottom-[4.75rem] z-40 mx-auto max-w-3xl animate-slide-up rounded-2xl border border-border/70 bg-background/95 p-3 shadow-lift backdrop-blur-md lg:bottom-3"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
       <div className="flex flex-wrap items-center justify-between gap-3">

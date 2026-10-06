@@ -91,7 +91,7 @@ export function ResetPasswordForm({
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-2xl shadow-lift">
       <CardHeader>
         <CardTitle>{text.title}</CardTitle>
         <CardDescription>{text.description}</CardDescription>
@@ -118,7 +118,9 @@ export function ResetPasswordForm({
               {...register("password")}
             />
             {errors.password ? (
-              <p className="text-sm text-red-700">{errors.password.message}</p>
+              <p className="text-sm font-medium text-destructive">
+                {errors.password.message}
+              </p>
             ) : null}
           </div>
 

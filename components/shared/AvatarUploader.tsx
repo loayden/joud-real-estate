@@ -115,7 +115,7 @@ export function AvatarUploader({
           ) : (
             fallbackText
           )}
-          <span className="bg-primary/82 absolute bottom-0 flex h-8 w-full items-center justify-center text-primary-foreground">
+          <span className="absolute bottom-0 flex h-8 w-full items-center justify-center bg-primary/80 text-primary-foreground">
             {isUploading ? (
               <Loader2 className="size-4 animate-spin" />
             ) : (

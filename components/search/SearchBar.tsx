@@ -63,12 +63,13 @@ export function SearchBar({ locale }: { locale: Locale }) {
       aria-label={text.label}
       className="flex w-full flex-col gap-3 sm:flex-row"
       onSubmit={onSubmit}
+      role="search"
     >
-      <div className="relative min-w-0 flex-1">
-        <Search className="pointer-events-none absolute start-3 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+      <div className="transition-all-fast relative min-w-0 flex-1 rounded-2xl focus-within:shadow-md focus-within:ring-2 focus-within:ring-ring">
+        <Search className="pointer-events-none absolute start-3.5 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
         <Input
           aria-label={text.label}
-          className="h-12 pe-12 ps-11 text-base"
+          className="h-12 rounded-2xl border-border bg-background pe-12 ps-11 text-base shadow-xs focus-visible:ring-0"
           disabled={isPending}
           onChange={(event) => setValue(event.target.value)}
           placeholder={text.placeholder}
@@ -77,7 +78,7 @@ export function SearchBar({ locale }: { locale: Locale }) {
         {value ? (
           <button
             aria-label={text.clear}
-            className="absolute end-2 top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="absolute end-2 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             disabled={isPending}
             onClick={() => {
               setValue("");
@@ -89,7 +90,11 @@ export function SearchBar({ locale }: { locale: Locale }) {
           </button>
         ) : null}
       </div>
-      <Button className="h-12 px-6" disabled={isPending} type="submit">
+      <Button
+        className="h-12 shrink-0 rounded-2xl px-7"
+        disabled={isPending}
+        type="submit"
+      >
         <Search className="size-4" />
         {text.submit}
       </Button>

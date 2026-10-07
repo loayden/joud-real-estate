@@ -12,9 +12,35 @@ on:
       - develop
       - stabilize
 
+# The build fail-fasts without DATABASE_URL/DIRECT_DATABASE_URL (lib/env.ts)
+# and prerender + smoke tests query the database, so every job gets an
+# ephemeral Postgres service with the schema deployed.
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/joud_ci?schema=public
+  DIRECT_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/joud_ci?schema=public
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  AUTH_URL: http://localhost:3000
+  AUTH_SECRET: ci-test-secret
+  PLAYWRIGHT_BASE_URL: http://localhost:3000
+
 jobs:
   web:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: joud_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -28,6 +54,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Deploy database schema
+        run: npx prisma migrate deploy
 
       - name: Lint
         run: npm run lint
@@ -47,6 +76,21 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: joud_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -60,10 +104,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Deploy database schema
+        run: npx prisma migrate deploy
+
+      - name: Seed test data
+        run: npx prisma db seed
+
       - name: Install Playwright
         run: npx playwright install --with-deps chromium
 
       - name: Run smoke tests
         run: npm run test:smoke
-        env:
-          PLAYWRIGHT_BASE_URL: http://localhost:3000

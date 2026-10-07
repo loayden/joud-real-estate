@@ -16,7 +16,9 @@ for (const locale of LOCALES) {
 
     test(`navigation works`, async ({ page }) => {
       await page.goto(`/${locale}`);
-      await expect(page.locator("nav").first()).toBeVisible();
+      // Desktop shows the header nav, mobile shows the bottom nav —
+      // assert that at least one navigation landmark is visible.
+      await expect(page.locator("nav:visible").first()).toBeVisible();
     });
   });
 

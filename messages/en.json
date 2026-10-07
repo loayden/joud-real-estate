@@ -25,7 +25,8 @@
     "add": "Add listing",
     "favorites": "Favorites",
     "account": "Account",
-    "primary": "Primary navigation"
+    "primary": "Primary navigation",
+    "bottomNav": "Bottom navigation"
   },
   "common": {
     "save": "Save",

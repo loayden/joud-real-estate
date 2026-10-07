@@ -87,13 +87,16 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    let emailSent = false;
+
     try {
-      await sendVerificationEmail(
+      const status = await sendVerificationEmail(
         email,
         token,
         locale,
         user.profile?.firstName ?? undefined,
       );
+      emailSent = status.sent;
     } catch (emailError) {
       console.error("Resend verification email failed", {
         email,
@@ -103,6 +106,7 @@ export async function POST(req: NextRequest) {
 
     return apiSuccess({
       message: genericMessage,
+      emailSent,
       ...(shouldExposeDevelopmentEmailLinks()
         ? { devVerificationUrl: buildVerificationUrl(token, locale) }
         : {}),

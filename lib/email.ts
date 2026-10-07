@@ -13,6 +13,14 @@ export type EmailTemplateKey =
   | "property-approved"
   | "property-rejected";
 
+export type EmailDeliveryStatus =
+  | { sent: true }
+  | {
+      sent: false;
+      reason: "not-configured" | "cooldown" | "provider-error";
+      detail?: string;
+    };
+
 export type RenderedEmail = {
   subject: string;
   html: string;
@@ -268,7 +276,12 @@ async function isEmailCooldownActive(throttleKey?: string) {
   return false;
 }
 
-async function sendEmail({ to, subject, html, throttleKey }: SendEmailInput) {
+async function sendEmail({
+  to,
+  subject,
+  html,
+  throttleKey,
+}: SendEmailInput): Promise<EmailDeliveryStatus> {
   const from = process.env.RESEND_FROM_EMAIL ?? "noreply@joud.sa";
   const cooldownActive = await isEmailCooldownActive(throttleKey);
 
@@ -276,22 +289,53 @@ async function sendEmail({ to, subject, html, throttleKey }: SendEmailInput) {
     if (process.env.NODE_ENV !== "production") {
       console.info(`Email cooldown skipped: ${subject} -> ${to}`);
     }
-    return;
+    return { sent: false, reason: "cooldown" };
   }
 
   if (!resend) {
-    if (process.env.NODE_ENV !== "production") {
-      console.info(`Email skipped in development: ${subject} -> ${to}`);
-    }
-    return;
+    logMissingEmailConfigOnce(subject, to);
+    return { sent: false, reason: "not-configured" };
   }
 
-  await resend.emails.send({
+  // Resend resolves with { data, error } instead of throwing on API errors
+  // (invalid key, unverified domain, quota) — the result must be checked.
+  const result = await resend.emails.send({
     from,
     to,
     subject,
     html,
   });
+
+  if (result.error) {
+    console.error("Email provider rejected the message", {
+      to,
+      subject,
+      code: result.error.name,
+      message: result.error.message,
+    });
+    return {
+      sent: false,
+      reason: "provider-error",
+      detail: result.error.message,
+    };
+  }
+
+  return { sent: true };
+}
+
+let missingConfigLogged = false;
+
+function logMissingEmailConfigOnce(subject: string, to: string) {
+  if (process.env.NODE_ENV !== "production") {
+    console.info(`Email skipped in development: ${subject} -> ${to}`);
+    return;
+  }
+
+  if (missingConfigLogged) return;
+  missingConfigLogged = true;
+  console.error(
+    "Email delivery is not configured in production: set RESEND_API_KEY and RESEND_FROM_EMAIL (with a domain verified in Resend). Users cannot receive verification emails until this is fixed.",
+  );
 }
 
 export function renderWelcomeEmail(
@@ -498,7 +542,7 @@ export async function sendWelcomeEmail(
 ) {
   const rendered = renderWelcomeEmail({ firstName }, locale);
 
-  await sendEmail({
+  return sendEmail({
     to: email,
     ...rendered,
     throttleKey: makeThrottleKey("welcome", email, rendered.subject),
@@ -516,7 +560,7 @@ export async function sendVerificationEmail(
     locale,
   );
 
-  await sendEmail({
+  return sendEmail({
     to: email,
     ...rendered,
     throttleKey: makeThrottleKey("email-verification", email, rendered.subject),
@@ -533,7 +577,7 @@ export async function sendPasswordResetEmail(
     locale,
   );
 
-  await sendEmail({
+  return sendEmail({
     to: email,
     ...rendered,
     throttleKey: makeThrottleKey("password-reset", email, rendered.subject),
@@ -547,7 +591,7 @@ export async function sendInquiryNotificationEmail(
 ) {
   const rendered = renderInquiryNotificationEmail(data, locale);
 
-  await sendEmail({
+  return sendEmail({
     to: email,
     ...rendered,
     throttleKey: makeThrottleKey(
@@ -565,7 +609,7 @@ export async function sendPropertyApprovedEmail(
 ) {
   const rendered = renderPropertyApprovedEmail(data, locale);
 
-  await sendEmail({
+  return sendEmail({
     to: email,
     ...rendered,
     throttleKey: makeThrottleKey("property-approved", email, data.propertyUrl),
@@ -579,7 +623,7 @@ export async function sendPropertyRejectedEmail(
 ) {
   const rendered = renderPropertyRejectedEmail(data, locale);
 
-  await sendEmail({
+  return sendEmail({
     to: email,
     ...rendered,
     throttleKey: makeThrottleKey("property-rejected", email, data.editUrl),
@@ -622,7 +666,7 @@ export async function sendPriceDropAlertEmail(
        ${button("View property", data.propertyUrl)}`;
   const rendered = { subject, html: templateShell(locale, body) };
 
-  await sendEmail({
+  return sendEmail({
     to: email,
     ...rendered,
     throttleKey: makeThrottleKey("price-drop-alert", email, data.propertyUrl),

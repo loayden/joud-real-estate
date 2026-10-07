@@ -92,11 +92,16 @@ export async function POST(req: NextRequest) {
 
     // Email delivery must never fail registration: the account and token
     // are already committed above, and the user can resend the link.
+    // The delivery status is reported so the UI never promises an email
+    // that was not actually sent.
+    let verificationSent = false;
+
     try {
-      await Promise.all([
+      const [verificationStatus] = await Promise.all([
         sendVerificationEmail(email, token, locale, firstName),
         sendWelcomeEmail(email, firstName, locale),
       ]);
+      verificationSent = verificationStatus.sent;
     } catch (emailError) {
       console.error("Registration email delivery failed", {
         email,
@@ -110,6 +115,7 @@ export async function POST(req: NextRequest) {
           locale === "ar"
             ? "تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتفعيل الحساب"
             : "Account created. Check your email to verify your account",
+        emailSent: verificationSent,
         ...(shouldExposeDevelopmentEmailLinks()
           ? { devVerificationUrl: buildVerificationUrl(token, locale) }
           : {}),

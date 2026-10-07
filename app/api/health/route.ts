@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isEmailDeliveryConfigured } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { redis } from "@/lib/redis";
 
@@ -34,6 +35,7 @@ export async function GET() {
       status: isHealthy ? "ok" : "error",
       db,
       redis: redisStatus,
+      email: isEmailDeliveryConfigured() ? "ok" : "skipped",
     },
     {
       status: isHealthy ? 200 : 503,

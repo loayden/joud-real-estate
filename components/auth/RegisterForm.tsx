@@ -48,6 +48,8 @@ const copy = {
       "رابط التفعيل ظاهر هنا لأن إرسال البريد غير مفعّل في بيئة التطوير.",
     success:
       "تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتفعيل الحساب قبل تسجيل الدخول.",
+    emailUnavailable:
+      "تم إنشاء الحساب، لكن تعذّر إرسال بريد التفعيل. يمكنك طلب رابط جديد من صفحة تسجيل الدخول.",
     genericError: "تعذر إنشاء الحساب. حاول مرة أخرى.",
     captchaRequired: "يرجى إكمال التحقق الأمني.",
   },
@@ -70,6 +72,8 @@ const copy = {
       "This verification link is shown because email delivery is disabled in development.",
     success:
       "Account created. Check your email to verify the account before logging in.",
+    emailUnavailable:
+      "Account created, but the verification email could not be sent. You can request a new link from the login page.",
     genericError: "Could not create the account. Please try again.",
     captchaRequired: "Complete the security verification.",
   },
@@ -86,6 +90,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
   const { token: csrfToken } = useCsrfToken();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isComplete, setIsComplete] = useState(false);
+  const [emailSent, setEmailSent] = useState(true);
   const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(
     null,
   );
@@ -133,6 +138,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
     });
     const payload = (await response.json()) as ApiResponse<{
       message: string;
+      emailSent?: boolean;
       devVerificationUrl?: string;
     }>;
 
@@ -145,6 +151,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
     }
 
     setDevVerificationUrl(payload.data.devVerificationUrl ?? null);
+    setEmailSent(payload.data.emailSent ?? false);
     setIsComplete(true);
     window.dispatchEvent(new CustomEvent("joud:session-changed"));
   }
@@ -157,9 +164,9 @@ export function RegisterForm({ locale }: { locale: Locale }) {
           <CardDescription>{text.description}</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-5">
-          <Alert variant="success">
+          <Alert variant={emailSent ? "success" : "warning"}>
             <div className="grid gap-3">
-              <p>{text.success}</p>
+              <p>{emailSent ? text.success : text.emailUnavailable}</p>
               {devVerificationUrl ? (
                 <div className="grid gap-2">
                   <p className="text-xs opacity-80">{text.developmentLink}</p>

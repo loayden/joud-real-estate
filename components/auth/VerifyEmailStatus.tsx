@@ -117,10 +117,16 @@ export function VerifyEmailStatus({
       });
       const payload = (await response.json()) as ApiResponse<{
         message: string;
+        emailSent?: boolean;
       }>;
 
       if (!response.ok || !payload.success) {
         throw new Error(payload.success ? text.resendError : payload.error);
+      }
+
+      if (payload.data.emailSent === false) {
+        setResendNotice({ type: "error", message: text.resendError });
+        return;
       }
 
       setResendNotice({ type: "success", message: text.resent });

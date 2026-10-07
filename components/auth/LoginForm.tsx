@@ -153,10 +153,17 @@ export function LoginForm({
       });
       const payload = (await response.json()) as ApiResponse<{
         message: string;
+        emailSent?: boolean;
       }> & { details?: { devVerificationUrl?: string } };
 
       if (!response.ok || !payload.success) {
         throw new Error(payload.success ? text.resendError : payload.error);
+      }
+
+      if (payload.data.emailSent === false) {
+        setResendNotice({ type: "error", message: text.resendError });
+        setDevVerificationUrl(null);
+        return;
       }
 
       setResendNotice({ type: "success", message: text.resent });

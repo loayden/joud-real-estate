@@ -218,22 +218,47 @@ test.describe("Phase 3 - permissions + IDOR (API + pages)", () => {
       const res = await qreq.get(url, { headers });
       expect([401, 403]).toContain(res.status());
     }
-    // IDOR: qa-user tries to edit/delete admin's demo listing
-    const putOther = await qreq.put(
-      `${BASE}/api/properties/cmtkelcea009csa9xpfhnyykb`,
-      {
-        headers,
-        data: { titleAr: "محاولة تعديل غير مصرح بها" },
+    // IDOR: qa-user tries to edit/delete another user's listing. The target
+    // is created here by the admin so the test never depends on seed IDs
+    // or on listings leaked by other tests (which qa-user might own).
+    const adminCtx = await browser.newContext({ storageState: ADMIN_STATE });
+    const areq = adminCtx.request;
+    const adminCsrf = await (await areq.get(`${BASE}/api/csrf`)).json();
+    const adminHeaders = {
+      "x-csrf-token": adminCsrf.data.token,
+      "Content-Type": "application/json",
+    };
+    const created = await areq.post(`${BASE}/api/properties`, {
+      headers: adminHeaders,
+      data: {
+        titleAr: `عقار اختبار صلاحيات ${Date.now()}`,
+        descriptionAr:
+          "شقة اختبار شاملة بوصف كافٍ يتجاوز الحد الأدنى المطلوب للتحقق من صحة البيانات.",
+        listingType: "SALE",
+        categoryId: IDS.categoryId,
+        typeId: IDS.typeId,
+        regionId: IDS.regionId,
+        cityId: IDS.cityId,
+        price: 1500000,
+        area: 120,
       },
-    );
+    });
+    expect(created.status()).toBe(201);
+    const otherId: string = (await created.json()).data.id;
+    const putOther = await qreq.put(`${BASE}/api/properties/${otherId}`, {
+      headers,
+      data: { titleAr: "محاولة تعديل غير مصرح بها" },
+    });
     expect([401, 403, 404]).toContain(putOther.status());
-    const delOther = await qreq.delete(
-      `${BASE}/api/properties/cmtkelcea009csa9xpfhnyykb`,
-      {
-        headers,
-      },
-    );
+    const delOther = await qreq.delete(`${BASE}/api/properties/${otherId}`, {
+      headers,
+    });
     expect([401, 403, 404]).toContain(delOther.status());
+    const cleanup = await areq.delete(`${BASE}/api/properties/${otherId}`, {
+      headers: adminHeaders,
+    });
+    expect([200, 204]).toContain(cleanup.status());
+    await adminCtx.close();
     // mine returns 200 (ownership enforced server-side)
     const mine = await qreq.get(`${BASE}/api/properties/mine`);
     expect(mine.status()).toBe(200);

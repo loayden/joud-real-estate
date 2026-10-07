@@ -1,7 +1,11 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 
-import { resolveLookupIds, type LookupIds } from "./lookup-ids";
+import {
+  resolveLookupIds,
+  resolveApprovedListingId,
+  type LookupIds,
+} from "./lookup-ids";
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 const QA_EMAIL = process.env.QA_USER_EMAIL || "qa-user@joud.test";
@@ -279,7 +283,7 @@ test.describe("Phase 2 - listing CRUD matrix (API)", () => {
       if (r.status() === 201) dupIds.push((await r.json()).data.id);
     }
     // favorite/inquiry/report target an APPROVED listing (drafts correctly 404)
-    const approvedId = "cmtkelcea009csa9xpfhnyykb"; // demo-sale-1
+    const approvedId = await resolveApprovedListingId(req, BASE);
     const favDraft = await req.post(`${BASE}/api/favorites`, {
       headers,
       data: { propertyId: id },

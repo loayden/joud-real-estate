@@ -60,3 +60,24 @@ export async function resolveLookupIds(
     cityId2: city2.id,
   };
 }
+
+/**
+ * Return the ID of any live (approved) listing, for favorite / inquiry /
+ * report flows that require a non-draft property. Never hardcode a cuid:
+ * seed data regenerates IDs on every fresh database.
+ */
+export async function resolveApprovedListingId(
+  request: APIRequestContext,
+  base: string,
+): Promise<string> {
+  const res = await request.get(`${base}/api/properties/search?limit=1`);
+  if (!res.ok()) {
+    throw new Error(`approved listing lookup failed: ${res.status()}`);
+  }
+  const body = await res.json();
+  const id = body?.data?.data?.[0]?.id;
+  if (typeof id !== "string" || !id) {
+    throw new Error("approved listing lookup failed: no live listings");
+  }
+  return id;
+}

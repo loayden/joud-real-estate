@@ -1258,6 +1258,33 @@ async function seedSuperAdmin() {
   });
 }
 
+async function seedQaUser() {
+  // Deterministic test account for the Playwright smoke suite
+  // (tests/smoke/launch-phase{2,3}.spec.ts log in as qa-user@joud.test).
+  // Upsert keeps it idempotent across repeated seeds.
+  const hash = await bcrypt.hash("QaUser@2024!", 12);
+
+  await prisma.user.upsert({
+    where: { email: "qa-user@joud.test" },
+    update: {},
+    create: {
+      email: "qa-user@joud.test",
+      phone: "+201001234560",
+      passwordHash: hash,
+      role: "USER",
+      status: "ACTIVE",
+      emailVerified: new Date(),
+      profile: {
+        create: {
+          firstName: "QA",
+          lastName: "User",
+          preferredLocale: "ar",
+        },
+      },
+    },
+  });
+}
+
 async function seedFeatureFlags() {
   for (const flag of featureFlags) {
     await prisma.featureFlag.upsert({
@@ -2260,6 +2287,7 @@ async function main() {
   await seedCategories();
   await seedAmenities();
   await seedSuperAdmin();
+  await seedQaUser();
   await seedFeatureFlags();
   await seedDemoProperties();
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { apiSuccess, handleApiError } from "@/lib/api-response";
+import { HttpError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { requireSession } from "@/lib/auth-utils";
 import { prisma } from "@/lib/prisma";
 
@@ -30,6 +30,21 @@ export async function GET() {
       firstName: user.profile?.firstName ?? null,
     });
   } catch (error) {
+    // Guests hit this endpoint on every pageview (OnboardingGate check).
+    // "Not logged in" is an expected state, not an error: answer 200 with
+    // nothing to show instead of polluting logs with 401s.
+    if (
+      error instanceof HttpError &&
+      error.status === 401 &&
+      error.code === "UNAUTHORIZED"
+    ) {
+      return apiSuccess({
+        completed: true,
+        guest: true,
+        firstName: null,
+      });
+    }
+
     return handleApiError(error);
   }
 }

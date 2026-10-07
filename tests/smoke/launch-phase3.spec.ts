@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 
+import { resolveLookupIds, type LookupIds } from "./lookup-ids";
+
 const BASE = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 const ADMIN_EMAIL = "admin@joud.sa";
 const ADMIN_PASS = "JoudAdmin@2024!";
@@ -9,12 +11,13 @@ const QA_PASS = process.env.QA_USER_PASS || "QaUser@2024!";
 const QA_STATE = path.join(__dirname, ".auth", "qa.json");
 const ADMIN_STATE = path.join(__dirname, ".auth", "admin.json");
 
-const IDS = {
-  categoryId: "cmq68100a001dareqt8o59m0n",
-  typeId: "cmq68100c001fareqh2s5rsn8",
-  regionId: "cmtke6vv70000p6iaebnwxykj",
-  cityId: "cmtke6vwe000lp6iaw12rxmxj",
-};
+// Resolved dynamically per run (see lookup-ids.ts): seed data regenerates
+// cuids on every fresh database, so hardcoded IDs only match one DB.
+let IDS: LookupIds;
+
+test.beforeAll(async ({ request }) => {
+  IDS = await resolveLookupIds(request, BASE);
+});
 
 async function csrfHeaders(page: any) {
   const res = await page.request.get(`${BASE}/api/csrf`);

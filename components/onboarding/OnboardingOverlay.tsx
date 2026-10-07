@@ -20,6 +20,7 @@ import { apiFetch } from "@/lib/api-client";
 
 type OnboardingStatus = {
   completed: boolean;
+  guest?: boolean;
   firstName: string | null;
 };
 
@@ -123,6 +124,7 @@ function usePrefersReducedMotion() {
 export function OnboardingGate({ locale }: { locale: Locale }) {
   const [visible, setVisible] = useState(false);
   const [replay, setReplay] = useState(false);
+  const [isGuest, setIsGuest] = useState(true);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -145,11 +147,14 @@ export function OnboardingGate({ locale }: { locale: Locale }) {
         data?: OnboardingStatus;
       };
       if (payload.success && payload.data && !payload.data.completed) {
+        setIsGuest(payload.data.guest === true);
         setFirstName(payload.data.firstName);
         setReplay(false);
         setStep(0);
         setStepKey((key) => key + 1);
         setVisible(true);
+      } else if (payload.success && payload.data) {
+        setIsGuest(payload.data.guest === true);
       }
     } catch {
       // Offline or unauthenticated: stay hidden, never block the app.
@@ -202,7 +207,9 @@ export function OnboardingGate({ locale }: { locale: Locale }) {
   const close = useCallback(
     async (persist: boolean) => {
       setVisible(false);
-      if (persist && !replay) {
+      // Guests have nothing to persist server-side — skip the POST so a
+      // replayed tour never produces 401 noise.
+      if (persist && !replay && !isGuest) {
         try {
           await apiFetch("/api/onboarding", { method: "POST" });
         } catch {
@@ -211,7 +218,7 @@ export function OnboardingGate({ locale }: { locale: Locale }) {
         }
       }
     },
-    [replay],
+    [isGuest, replay],
   );
 
   const goTo = useCallback(

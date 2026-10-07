@@ -15,12 +15,18 @@ export default defineConfig({
   },
   projects: [
     {
+      name: "setup",
+      testMatch: /.*\.setup\.ts/,
+    },
+    {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
     },
     {
       name: "mobile-chrome",
       use: { ...devices["Pixel 5"] },
+      dependencies: ["setup"],
     },
   ],
   webServer: {

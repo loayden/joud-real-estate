@@ -1,20 +1,21 @@
 import { test, expect } from "@playwright/test";
 import path from "path";
 
+import { resolveLookupIds, type LookupIds } from "./lookup-ids";
+
 const BASE = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
 const QA_EMAIL = process.env.QA_USER_EMAIL || "qa-user@joud.test";
 const QA_PASS = process.env.QA_USER_PASS || "QaUser@2024!";
 const QA_STATE = path.join(__dirname, ".auth", "qa.json");
 const ADMIN_STATE = path.join(__dirname, ".auth", "admin.json");
 
-// Valid seed IDs (verified 2026-09-24 via DB query)
-const IDS = {
-  categoryId: "cmq68100a001dareqt8o59m0n", // residential
-  typeId: "cmq68100c001fareqh2s5rsn8", // apartment
-  regionId: "cmtke6vv70000p6iaebnwxykj", // cairo
-  cityId: "cmtke6vwe000lp6iaw12rxmxj", // heliopolis
-  cityId2: "cmtke6vwl000vp6ia2c1vjjh7", // maadi
-};
+// Resolved dynamically per run (see lookup-ids.ts): seed data regenerates
+// cuids on every fresh database, so hardcoded IDs only match one DB.
+let IDS: LookupIds;
+
+test.beforeAll(async ({ request }) => {
+  IDS = await resolveLookupIds(request, BASE);
+});
 
 function basePayload(titleAr: string, overrides: Record<string, any> = {}) {
   return {

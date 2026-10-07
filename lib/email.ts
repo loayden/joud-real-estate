@@ -226,6 +226,10 @@ function muted(text: string) {
   return `<p style="margin:16px 0 0;color:#64748b;">${escapeHtml(text)}</p>`;
 }
 
+function fallbackLink(label: string, href: string) {
+  return `<p style="margin:16px 0 0;color:#64748b;font-size:13px;word-break:break-all;">${escapeHtml(label)}<br /><a href="${escapeAttribute(href)}" style="color:#1B4B8A;">${escapeHtml(href)}</a></p>`;
+}
+
 function detailBox(content: string, tone: "neutral" | "warning" = "neutral") {
   const style =
     tone === "warning"
@@ -332,11 +336,13 @@ export function renderVerificationEmail(
     ? `<p style="margin:0 0 16px;">${greeting}</p>
        <p style="margin:0;">اضغط على الزر التالي لتفعيل بريدك الإلكتروني في جود العقارية.</p>
        ${button("تفعيل البريد الإلكتروني", data.verifyUrl)}
-       ${muted("هذا الرابط صالح لمدة 24 ساعة.")}`
+       ${muted("هذا الرابط صالح لمدة 24 ساعة.")}
+       ${fallbackLink("إذا لم يعمل الزر، انسخ هذا الرابط والصقه في المتصفح:", data.verifyUrl)}`
     : `<p style="margin:0 0 16px;">${greeting}</p>
        <p style="margin:0;">Click the button below to verify your email address for Joud Real Estate.</p>
        ${button("Verify email", data.verifyUrl)}
-       ${muted("This link expires in 24 hours.")}`;
+       ${muted("This link expires in 24 hours.")}
+       ${fallbackLink("If the button does not work, copy and paste this link:", data.verifyUrl)}`;
 
   return { subject, html: templateShell(locale, body) };
 }
@@ -358,11 +364,13 @@ export function renderPasswordResetEmail(
     ? `<p style="margin:0 0 16px;">${greeting}</p>
        <p style="margin:0;">وصلنا طلب لإعادة تعيين كلمة مرور حسابك.</p>
        ${button("إعادة تعيين كلمة المرور", data.resetUrl)}
-       ${muted("إذا لم تطلب ذلك، تجاهل هذا البريد.")}`
+       ${muted("إذا لم تطلب ذلك، تجاهل هذا البريد.")}
+       ${fallbackLink("إذا لم يعمل الزر، انسخ هذا الرابط والصقه في المتصفح:", data.resetUrl)}`
     : `<p style="margin:0 0 16px;">${greeting}</p>
        <p style="margin:0;">We received a request to reset your account password.</p>
        ${button("Reset password", data.resetUrl)}
-       ${muted("If you did not request this, you can ignore this email.")}`;
+       ${muted("If you did not request this, you can ignore this email.")}
+       ${fallbackLink("If the button does not work, copy and paste this link:", data.resetUrl)}`;
 
   return { subject, html: templateShell(locale, body) };
 }
@@ -501,9 +509,10 @@ export async function sendVerificationEmail(
   email: string,
   token: string,
   locale: Locale = "ar",
+  firstName?: string,
 ) {
   const rendered = renderVerificationEmail(
-    { verifyUrl: buildVerificationUrl(token, locale) },
+    { verifyUrl: buildVerificationUrl(token, locale), firstName },
     locale,
   );
 

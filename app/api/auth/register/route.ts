@@ -90,10 +90,19 @@ export async function POST(req: NextRequest) {
       });
     });
 
-    await Promise.all([
-      sendVerificationEmail(email, token, locale),
-      sendWelcomeEmail(email, firstName, locale),
-    ]);
+    // Email delivery must never fail registration: the account and token
+    // are already committed above, and the user can resend the link.
+    try {
+      await Promise.all([
+        sendVerificationEmail(email, token, locale, firstName),
+        sendWelcomeEmail(email, firstName, locale),
+      ]);
+    } catch (emailError) {
+      console.error("Registration email delivery failed", {
+        email,
+        error: emailError instanceof Error ? emailError.message : emailError,
+      });
+    }
 
     return apiSuccess(
       {

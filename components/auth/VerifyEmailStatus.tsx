@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Alert } from "@/components/ui/alert";
@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Link, type Locale } from "@/i18n/routing";
 
 type ApiResponse<T> =
@@ -26,6 +28,13 @@ const copy = {
     success: "تم تفعيل بريدك الإلكتروني بنجاح.",
     error: "رابط التفعيل غير صحيح أو منتهي الصلاحية.",
     login: "تسجيل الدخول",
+    resendTitle: "انتهت صلاحية الرابط؟",
+    resendDescription: "أدخل بريدك وسنرسل لك رابط تفعيل جديد.",
+    email: "البريد الإلكتروني",
+    resend: "إرسال رابط جديد",
+    resending: "جار إرسال الرابط",
+    resent: "أرسلنا رابط تفعيل جديد إلى بريدك.",
+    resendError: "تعذر إرسال الرابط. حاول مرة أخرى.",
   },
   en: {
     title: "Verify Email",
@@ -34,6 +43,13 @@ const copy = {
     success: "Your email address has been verified.",
     error: "The verification link is invalid or expired.",
     login: "Login",
+    resendTitle: "Link expired?",
+    resendDescription: "Enter your email and we will send a new link.",
+    email: "Email",
+    resend: "Send a new link",
+    resending: "Sending link",
+    resent: "A new verification link was sent to your email.",
+    resendError: "Could not send the link. Please try again.",
   },
 } as const;
 
@@ -50,6 +66,12 @@ export function VerifyEmailStatus({
     token ? "loading" : "error",
   );
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const [resendNotice, setResendNotice] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!token || didRun.current) return;
@@ -80,8 +102,41 @@ export function VerifyEmailStatus({
     });
   }, [text.error, token]);
 
+  async function handleResend(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedEmail = email.trim();
+    if (!normalizedEmail || isResending) return;
+    setIsResending(true);
+    setResendNotice(null);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: normalizedEmail, locale }),
+      });
+      const payload = (await response.json()) as ApiResponse<{
+        message: string;
+      }>;
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.success ? text.resendError : payload.error);
+      }
+
+      setResendNotice({ type: "success", message: text.resent });
+    } catch (resendError) {
+      setResendNotice({
+        type: "error",
+        message:
+          resendError instanceof Error ? resendError.message : text.resendError,
+      });
+    } finally {
+      setIsResending(false);
+    }
+  }
+
   return (
-    <Card className="w-full">
+    <Card className="w-full rounded-2xl shadow-lift">
       <CardHeader>
         <CardTitle>{text.title}</CardTitle>
         <CardDescription>{text.description}</CardDescription>
@@ -102,7 +157,65 @@ export function VerifyEmailStatus({
           <Alert variant="destructive">{error ?? text.error}</Alert>
         ) : null}
 
-        <Button asChild className="w-full">
+        {status === "error" ? (
+          <form
+            className="grid gap-3 rounded-2xl border border-border bg-muted/30 p-4"
+            onSubmit={handleResend}
+          >
+            <div>
+              <p className="text-small font-bold text-foreground">
+                {text.resendTitle}
+              </p>
+              <p className="mt-1 text-small text-muted-foreground">
+                {text.resendDescription}
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="resend-email">{text.email}</Label>
+              <Input
+                autoComplete="email"
+                id="resend-email"
+                inputMode="email"
+                onChange={(event) => setEmail(event.target.value)}
+                type="email"
+                value={email}
+                required
+              />
+            </div>
+            {resendNotice ? (
+              <p
+                role="status"
+                className={
+                  resendNotice.type === "success"
+                    ? "text-sm font-medium text-success"
+                    : "text-sm font-medium text-destructive"
+                }
+              >
+                {resendNotice.message}
+              </p>
+            ) : null}
+            <Button
+              className="h-11 w-full rounded-xl"
+              disabled={isResending}
+              type="submit"
+              variant="secondary"
+            >
+              {isResending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {text.resending}
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  {text.resend}
+                </>
+              )}
+            </Button>
+          </form>
+        ) : null}
+
+        <Button asChild className="h-12 w-full rounded-xl">
           <Link href="/login">{text.login}</Link>
         </Button>
       </CardContent>

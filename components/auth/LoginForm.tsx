@@ -47,6 +47,10 @@ const copy = {
     developmentLink:
       "رابط التفعيل ظاهر هنا لأن إرسال البريد غير مفعّل في بيئة التطوير.",
     genericError: "تعذر تسجيل الدخول. حاول مرة أخرى.",
+    resend: "إرسال رابط تفعيل جديد",
+    resending: "جار إرسال الرابط",
+    resent: "أرسلنا رابط تفعيل جديد إلى بريدك.",
+    resendError: "تعذر إرسال الرابط. حاول مرة أخرى.",
   },
   en: {
     title: "Login",
@@ -64,6 +68,10 @@ const copy = {
     developmentLink:
       "This verification link is shown because email delivery is disabled in development.",
     genericError: "Could not log in. Please try again.",
+    resend: "Send a new verification link",
+    resending: "Sending link",
+    resent: "A new verification link was sent to your email.",
+    resendError: "Could not send the link. Please try again.",
   },
 } as const;
 
@@ -78,7 +86,13 @@ export function LoginForm({
   const router = useRouter();
   const { token: csrfToken } = useCsrfToken();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [serverCode, setServerCode] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendNotice, setResendNotice] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(
     null,
   );
@@ -86,6 +100,7 @@ export function LoginForm({
     formState: { errors, isSubmitting },
     handleSubmit,
     register,
+    getValues,
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
@@ -93,6 +108,8 @@ export function LoginForm({
 
   async function onSubmit(values: LoginInput) {
     setServerError(null);
+    setServerCode(null);
+    setResendNotice(null);
     setDevVerificationUrl(null);
 
     const response = await fetch("/api/auth/login", {
@@ -109,6 +126,7 @@ export function LoginForm({
 
     if (!response.ok || !payload.success) {
       setServerError(payload.success ? text.genericError : payload.error);
+      setServerCode(payload.success ? null : (payload.code ?? null));
       setDevVerificationUrl(
         payload.success ? null : (payload.details?.devVerificationUrl ?? null),
       );
@@ -118,6 +136,44 @@ export function LoginForm({
     router.push(payload.data.redirectTo ?? `/${locale}/dashboard`);
     router.refresh();
     window.dispatchEvent(new CustomEvent("joud:session-changed"));
+  }
+
+  async function handleResend() {
+    const email = getValues("email").trim();
+    if (!email || isResending) return;
+    setIsResending(true);
+    setResendNotice(null);
+    setDevVerificationUrl(null);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, locale }),
+      });
+      const payload = (await response.json()) as ApiResponse<{
+        message: string;
+      }> & { details?: { devVerificationUrl?: string } };
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.success ? text.resendError : payload.error);
+      }
+
+      setResendNotice({ type: "success", message: text.resent });
+      const devUrl =
+        "details" in payload
+          ? (payload.details?.devVerificationUrl ?? null)
+          : null;
+      setDevVerificationUrl(devUrl);
+    } catch (resendError) {
+      setResendNotice({
+        type: "error",
+        message:
+          resendError instanceof Error ? resendError.message : text.resendError,
+      });
+    } finally {
+      setIsResending(false);
+    }
   }
 
   return (
@@ -137,6 +193,39 @@ export function LoginForm({
             <Alert variant="destructive">
               <div className="grid gap-3">
                 <p>{serverError}</p>
+                {serverCode === "email_unverified" ? (
+                  <div className="grid gap-2">
+                    <Button
+                      className="h-11 w-full rounded-xl"
+                      disabled={isResending}
+                      onClick={handleResend}
+                      size="sm"
+                      type="button"
+                      variant="secondary"
+                    >
+                      {isResending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {text.resending}
+                        </>
+                      ) : (
+                        text.resend
+                      )}
+                    </Button>
+                    {resendNotice ? (
+                      <p
+                        role="status"
+                        className={
+                          resendNotice.type === "success"
+                            ? "text-sm font-medium text-success"
+                            : "text-sm font-medium"
+                        }
+                      >
+                        {resendNotice.message}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
                 {devVerificationUrl ? (
                   <div className="grid gap-2">
                     <p className="text-xs opacity-80">{text.developmentLink}</p>

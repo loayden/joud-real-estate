@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AuthShell } from "@/components/auth/AuthShell";
 import { VerifyEmailStatus } from "@/components/auth/VerifyEmailStatus";
 import type { Locale } from "@/i18n/routing";
 
@@ -30,8 +31,8 @@ export default function VerifyEmailPage({
     typeof searchParams.token === "string" ? searchParams.token : undefined;
 
   return (
-    <section className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md items-center px-4 py-12">
+    <AuthShell locale={locale}>
       <VerifyEmailStatus locale={locale} token={token} />
-    </section>
+    </AuthShell>
   );
 }

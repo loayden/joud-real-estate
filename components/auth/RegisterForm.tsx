@@ -49,7 +49,11 @@ const copy = {
     success:
       "تم إنشاء الحساب. تحقق من بريدك الإلكتروني لتفعيل الحساب قبل تسجيل الدخول.",
     emailUnavailable:
-      "تم إنشاء الحساب، لكن تعذّر إرسال بريد التفعيل. يمكنك طلب رابط جديد من صفحة تسجيل الدخول.",
+      "تم إنشاء الحساب، لكن تعذّر إرسال بريد التفعيل. يمكنك طلب رابط جديد أدناه.",
+    resend: "إرسال رابط تفعيل جديد",
+    resending: "جار إرسال الرابط",
+    resent: "أرسلنا رابط تفعيل جديد إلى بريدك.",
+    resendError: "تعذر إرسال الرابط. حاول مرة أخرى.",
     genericError: "تعذر إنشاء الحساب. حاول مرة أخرى.",
     captchaRequired: "يرجى إكمال التحقق الأمني.",
   },
@@ -73,7 +77,11 @@ const copy = {
     success:
       "Account created. Check your email to verify the account before logging in.",
     emailUnavailable:
-      "Account created, but the verification email could not be sent. You can request a new link from the login page.",
+      "Account created, but the verification email could not be sent. You can request a new link below.",
+    resend: "Send a new verification link",
+    resending: "Sending link",
+    resent: "A new verification link was sent to your email.",
+    resendError: "Could not send the link. Please try again.",
     genericError: "Could not create the account. Please try again.",
     captchaRequired: "Complete the security verification.",
   },
@@ -94,6 +102,11 @@ export function RegisterForm({ locale }: { locale: Locale }) {
   const [devVerificationUrl, setDevVerificationUrl] = useState<string | null>(
     null,
   );
+  const [isResending, setIsResending] = useState(false);
+  const [resendNotice, setResendNotice] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
@@ -102,6 +115,7 @@ export function RegisterForm({ locale }: { locale: Locale }) {
     handleSubmit,
     register,
     setValue,
+    getValues,
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -156,6 +170,51 @@ export function RegisterForm({ locale }: { locale: Locale }) {
     window.dispatchEvent(new CustomEvent("joud:session-changed"));
   }
 
+  async function handleResend() {
+    const regEmail = getValues("email").trim();
+    if (!regEmail || isResending) return;
+    setIsResending(true);
+    setResendNotice(null);
+    setDevVerificationUrl(null);
+
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: regEmail, locale }),
+      });
+      const payload = (await response.json()) as ApiResponse<{
+        message: string;
+        emailSent?: boolean;
+      }> & { details?: { devVerificationUrl?: string } };
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.success ? text.resendError : payload.error);
+      }
+
+      if (payload.data.emailSent === false) {
+        setResendNotice({ type: "error", message: text.resendError });
+        setDevVerificationUrl(null);
+        return;
+      }
+
+      setResendNotice({ type: "success", message: text.resent });
+      const devUrl =
+        "details" in payload
+          ? (payload.details?.devVerificationUrl ?? null)
+          : null;
+      setDevVerificationUrl(devUrl);
+    } catch (resendError) {
+      setResendNotice({
+        type: "error",
+        message:
+          resendError instanceof Error ? resendError.message : text.resendError,
+      });
+    } finally {
+      setIsResending(false);
+    }
+  }
+
   if (isComplete) {
     return (
       <Card className="w-full rounded-2xl shadow-lift">
@@ -178,6 +237,39 @@ export function RegisterForm({ locale }: { locale: Locale }) {
                   >
                     <a href={devVerificationUrl}>{text.verifyNow}</a>
                   </Button>
+                </div>
+              ) : null}
+              {!emailSent && !devVerificationUrl ? (
+                <div className="grid gap-2">
+                  <Button
+                    className="h-11 w-full rounded-xl"
+                    disabled={isResending}
+                    onClick={handleResend}
+                    size="sm"
+                    type="button"
+                    variant="secondary"
+                  >
+                    {isResending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {text.resending}
+                      </>
+                    ) : (
+                      text.resend
+                    )}
+                  </Button>
+                  {resendNotice ? (
+                    <p
+                      role="status"
+                      className={
+                        resendNotice.type === "success"
+                          ? "text-sm font-medium text-success"
+                          : "text-sm font-medium text-destructive"
+                      }
+                    >
+                      {resendNotice.message}
+                    </p>
+                  ) : null}
                 </div>
               ) : null}
             </div>

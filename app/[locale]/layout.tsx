@@ -10,6 +10,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { OnboardingGate } from "@/components/onboarding/OnboardingOverlay";
 import { ComparisonDrawer } from "@/components/property/ComparisonDrawer";
 import { Toaster } from "@/components/shared/Toaster";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import { locales, type Locale } from "@/i18n/routing";
 import { alternateLanguages, getSeoAppUrl, localizedUrl } from "@/lib/seo";
 
@@ -113,27 +114,29 @@ export default async function LocaleLayout({
           }}
         />
         <NextIntlClientProvider messages={messages}>
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-primary-foreground"
-          >
-            {locale === "ar"
-              ? "تخطَّ إلى المحتوى الرئيسي"
-              : "Skip to main content"}
-          </a>
-          <div className="flex min-h-dvh flex-col">
-            <Header />
-            <main id="main-content" className="flex-1" tabIndex={-1}>
-              {children}
-            </main>
-            <ComparisonDrawer locale={locale} />
-            <Footer locale={locale} />
-            {/* Spacer so the mobile bottom nav never covers footer content */}
-            <div aria-hidden className="h-16 lg:hidden" />
-            <MobileBottomNav />
-            <Toaster />
-            <OnboardingGate locale={locale} />
-          </div>
+          <AuthProvider>
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-primary-foreground"
+            >
+              {locale === "ar"
+                ? "تخطَّ إلى المحتوى الرئيسي"
+                : "Skip to main content"}
+            </a>
+            <div className="flex min-h-dvh flex-col">
+              <Header />
+              <main id="main-content" className="flex-1" tabIndex={-1}>
+                {children}
+              </main>
+              <ComparisonDrawer locale={locale} />
+              <Footer locale={locale} />
+              {/* Spacer so the mobile bottom nav never covers footer content */}
+              <div aria-hidden className="h-16 lg:hidden" />
+              <MobileBottomNav />
+              <Toaster />
+              <OnboardingGate locale={locale} />
+            </div>
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

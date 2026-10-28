@@ -336,9 +336,11 @@ export default async function PropertyDetailPage({
           area: property.area,
           status: property.status,
           isFeatured: property.isFeatured,
-          publishedAt: property.publishedAt?.toISOString() ?? null,
-          createdAt: property.createdAt.toISOString(),
-          updatedAt: property.updatedAt.toISOString(),
+          publishedAt: property.publishedAt
+            ? new Date(property.publishedAt).toISOString()
+            : null,
+          createdAt: new Date(property.createdAt).toISOString(),
+          updatedAt: new Date(property.updatedAt).toISOString(),
         }}
       />
       <script

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 function isActiveRoute(pathname: string, href: string) {
   const normalized = pathname.replace(/^\/(ar|en)(?=\/|$)/, "") || "/";
@@ -15,13 +16,22 @@ function isActiveRoute(pathname: string, href: string) {
 export function MobileBottomNav() {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const { user, isLoading } = useAuth();
+
+  // Auth-required items are hidden while loading to avoid flashing,
+  // and hidden entirely for unauthenticated users.
+  const authItems = user
+    ? [
+        { href: "/favorites", label: t("favorites"), Icon: Heart },
+        { href: "/dashboard", label: t("account"), Icon: UserRound },
+      ]
+    : [];
 
   const items = [
     { href: "/", label: t("home"), Icon: Home },
     { href: "/search", label: t("search"), Icon: Search },
+    ...(isLoading ? [] : authItems),
     { href: "/my-listings/new", label: t("add"), Icon: Plus, fab: true },
-    { href: "/favorites", label: t("favorites"), Icon: Heart },
-    { href: "/dashboard", label: t("account"), Icon: UserRound },
   ] as const;
 
   return (

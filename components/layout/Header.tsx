@@ -2,7 +2,7 @@
 
 import { Building2, LogOut, Menu } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 import { Link, usePathname } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 import { LocaleSwitcher } from "./LocaleSwitcher";
 
@@ -27,18 +28,6 @@ const navLinks = [
   { href: "/agents", labelKey: "agents" },
 ] as const;
 
-type CurrentUser = {
-  id: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  avatarUrl: string | null;
-};
-
-type ApiResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: string; code?: string };
-
 function isActiveRoute(pathname: string, href: string) {
   const normalized = pathname.replace(/^\/(ar|en)(?=\/|$)/, "") || "/";
   if (href === "/") return normalized === "/";
@@ -49,24 +38,21 @@ export function Header() {
   const t = useTranslations("nav");
   const site = useTranslations("site");
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
-  const [scrolled, setScrolled] = useState(false);
+  const { user, isLoading, logout } = useAuth();
   const initials = useMemo(() => {
-    if (!currentUser) return "";
-    const value = `${currentUser.firstName?.at(0) ?? ""}${
-      currentUser.lastName?.at(0) ?? ""
-    }`;
-    return value || currentUser.email.at(0)?.toUpperCase() || "";
-  }, [currentUser]);
+    if (!user) return "";
+    const value = `${user.firstName?.at(0) ?? ""}${user.lastName?.at(0) ?? ""}`;
+    return value || user.email.at(0)?.toUpperCase() || "";
+  }, [user]);
 
-  useEffect(() => {
+  useCallback(() => {
     let ticking = false;
 
     function onScroll() {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 8);
+        // Scrolled state is now purely cosmetic; no auth impact.
         ticking = false;
       });
     }
@@ -76,56 +62,8 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function loadUser() {
-      try {
-        const response = await fetch("/api/auth/me", {
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          setCurrentUser(null);
-          return;
-        }
-
-        const payload = (await response.json()) as ApiResponse<CurrentUser>;
-        setCurrentUser(payload.success ? payload.data : null);
-      } catch (error) {
-        if ((error as Error).name !== "AbortError") {
-          setCurrentUser(null);
-        }
-      }
-    }
-
-    void loadUser();
-    window.addEventListener("joud:user-updated", loadUser);
-
-    return () => {
-      controller.abort();
-      window.removeEventListener("joud:user-updated", loadUser);
-    };
-  }, []);
-
-  async function handleLogout() {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      window.location.href = "/";
-    } catch {
-      window.location.href = "/";
-    }
-  }
-
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md transition-shadow duration-200",
-        scrolled
-          ? "border-border shadow-[0_1px_2px_rgba(26,26,26,0.05),0_8px_24px_rgba(26,26,26,0.07)]"
-          : "border-border/60",
-      )}
-    >
+    <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md transition-shadow duration-200">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link
@@ -167,7 +105,7 @@ export function Header() {
         {/* Desktop Actions */}
         <div className="hidden items-center gap-2 lg:flex">
           <LocaleSwitcher />
-          {currentUser ? (
+          {isLoading ? null : user ? (
             <>
               <Button asChild size="sm" variant="secondary">
                 <Link href="/dashboard">{t("dashboard")}</Link>
@@ -175,18 +113,14 @@ export function Header() {
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={handleLogout}
+                onClick={logout}
                 aria-label={t("logout")}
                 className="size-9 text-muted-foreground"
               >
                 <LogOut className="size-4" />
               </Button>
               <Link aria-label={t("dashboard")} href="/profile">
-                <Avatar
-                  src={currentUser.avatarUrl}
-                  fallback={initials}
-                  size="md"
-                />
+                <Avatar src={user.avatarUrl} fallback={initials} size="md" />
               </Link>
             </>
           ) : (
@@ -241,7 +175,7 @@ export function Header() {
                 })}
               </nav>
               <div className="mt-auto grid gap-2.5 pt-6">
-                {currentUser ? (
+                {isLoading ? null : user ? (
                   <>
                     <SheetClose asChild>
                       <Button asChild variant="secondary" className="h-11">
@@ -256,11 +190,7 @@ export function Header() {
                       </Button>
                     </SheetClose>
                     <SheetClose asChild>
-                      <Button
-                        variant="ghost"
-                        onClick={handleLogout}
-                        className="h-11"
-                      >
+                      <Button variant="ghost" onClick={logout} className="h-11">
                         <LogOut className="size-4" />
                         {t("logout")}
                       </Button>

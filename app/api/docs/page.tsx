@@ -12,7 +12,6 @@ const ApiDocsViewer = dynamic(
         Loading API documentation...
       </div>
     ),
-    ssr: false,
   },
 );
 

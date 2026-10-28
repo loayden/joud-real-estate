@@ -38,7 +38,7 @@ const PriceHistoryChart = dynamic(
       (module) => module.PriceHistoryChart,
     ),
   {
-    ssr: false,
+    // ssr: false — PriceHistoryChart is already "use client"
     loading: () => (
       <div
         aria-hidden

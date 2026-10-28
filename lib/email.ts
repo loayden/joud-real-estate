@@ -3,6 +3,8 @@ import { Resend } from "resend";
 import { getBaseUrl } from "@/lib/base-url";
 import { redis } from "@/lib/redis";
 
+import nodemailer from "nodemailer";
+
 export type Locale = "ar" | "en";
 
 export type EmailTemplateKey =
@@ -89,6 +91,24 @@ const resendApiKey = process.env.RESEND_API_KEY;
 const resend =
   resendApiKey && !resendApiKey.includes("xxx")
     ? new Resend(resendApiKey)
+    : null;
+
+// Free SMTP fallback (Gmail, Outlook, etc.) — requires no domain verification.
+// Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM in Vercel to use.
+const smtpHost = process.env.SMTP_HOST;
+const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
+const smtpUser = process.env.SMTP_USER;
+const smtpPass = process.env.SMTP_PASS;
+const smtpFrom = process.env.SMTP_FROM;
+
+const smtpTransport =
+  smtpHost && smtpUser && smtpPass
+    ? nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465,
+        auth: { user: smtpUser, pass: smtpPass },
+      })
     : null;
 
 export const emailTemplateDefinitions: EmailTemplateDefinition[] = [
@@ -291,7 +311,7 @@ async function sendEmail({
   html,
   throttleKey,
 }: SendEmailInput): Promise<EmailDeliveryStatus> {
-  const from = process.env.RESEND_FROM_EMAIL ?? "noreply@joud.sa";
+  const from = smtpFrom ?? process.env.RESEND_FROM_EMAIL ?? "noreply@joud.sa";
   const cooldownActive = await isEmailCooldownActive(throttleKey);
 
   if (cooldownActive) {
@@ -299,6 +319,27 @@ async function sendEmail({
       console.info(`Email cooldown skipped: ${subject} -> ${to}`);
     }
     return { sent: false, reason: "cooldown" };
+  }
+
+  // Try SMTP first (free, no domain verification needed — e.g. Gmail SMTP).
+  if (smtpTransport) {
+    try {
+      await smtpTransport.sendMail({
+        from: smtpFrom ?? `"Joud Real Estate" <${smtpUser}>`,
+        to,
+        subject,
+        html,
+      });
+      await setEmailCooldown(throttleKey);
+      return { sent: true };
+    } catch (error) {
+      console.error("SMTP provider rejected the message", {
+        to,
+        subject,
+        error: error instanceof Error ? error.message : error,
+      });
+      // Fall through to Resend if SMTP fails.
+    }
   }
 
   if (!resend) {

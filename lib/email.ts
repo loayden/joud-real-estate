@@ -263,17 +263,26 @@ async function isEmailCooldownActive(throttleKey?: string) {
 
   try {
     const existing = await redis.get(key);
-
-    if (existing) {
-      return true;
-    }
-
-    await redis.set(key, "1", { ex: 300 });
+    return Boolean(existing);
   } catch (error) {
     console.warn(`Email cooldown check failed for ${throttleKey}`, error);
   }
 
   return false;
+}
+
+async function setEmailCooldown(throttleKey?: string) {
+  if (!throttleKey || !redis) {
+    return;
+  }
+
+  const key = `email:cooldown:${throttleKey}`;
+
+  try {
+    await redis.set(key, "1", { ex: 300 });
+  } catch (error) {
+    console.warn(`Email cooldown set failed for ${throttleKey}`, error);
+  }
 }
 
 async function sendEmail({
@@ -319,6 +328,10 @@ async function sendEmail({
       detail: result.error.message,
     };
   }
+
+  // Only set the cooldown after a successful send — never on failures,
+  // so a misconfigured provider doesn't lock out retries once it's fixed.
+  await setEmailCooldown(throttleKey);
 
   return { sent: true };
 }

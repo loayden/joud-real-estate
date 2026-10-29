@@ -13,8 +13,9 @@ export const runtime = "nodejs";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const identifier = getRateLimitIdentifier(req);
     await rateLimit(viewRateLimit, `view:${identifier}`);

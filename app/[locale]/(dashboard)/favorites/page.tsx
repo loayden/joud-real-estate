@@ -24,21 +24,23 @@ const copy = {
   },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].pageTitle,
   };
 }
 
 export default async function FavoritesPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const session = await requireSession();
   const text = copy[locale];
   const favorites = await getUserFavorites(session.user.id);

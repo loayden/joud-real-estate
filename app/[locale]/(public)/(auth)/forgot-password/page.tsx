@@ -9,22 +9,24 @@ const copy = {
   en: { title: "Reset Password" },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].title,
     robots: { index: false, follow: false },
   };
 }
 
-export default function ForgotPasswordPage({
-  params: { locale },
+export default async function ForgotPasswordPage({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return (
     <AuthShell locale={locale}>
       <ForgotPasswordForm locale={locale} />

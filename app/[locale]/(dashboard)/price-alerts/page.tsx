@@ -25,10 +25,11 @@ const copy = {
 } as const;
 
 export default async function PriceAlertsPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
   const session = await requireSession();
   const alerts = await getUserPriceAlerts(session.user.id);

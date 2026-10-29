@@ -9,24 +9,27 @@ const copy = {
   en: { title: "Verify Email" },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].title,
     robots: { index: false, follow: false },
   };
 }
 
-export default function VerifyEmailPage({
-  params: { locale },
-  searchParams,
+export default async function VerifyEmailPage({
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams: { token?: string | string[] };
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ token?: string | string[] }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const token =
     typeof searchParams.token === "string" ? searchParams.token : undefined;
 

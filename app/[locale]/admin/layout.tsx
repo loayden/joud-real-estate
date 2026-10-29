@@ -17,11 +17,12 @@ const copy = {
   },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].title,
     robots: { index: false, follow: false },
@@ -30,11 +31,12 @@ export function generateMetadata({
 
 export default async function AdminLayout({
   children,
-  params: { locale },
+  params: paramsPromise,
 }: Readonly<{
   children: React.ReactNode;
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
   const session = await requireRole(["ADMIN", "SUPER_ADMIN"]).catch(() => null);
 

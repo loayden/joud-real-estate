@@ -8,8 +8,9 @@ export const runtime = "nodejs";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { userId: string } },
+  { params: paramsPromise }: { params: Promise<{ userId: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const data = await getSellerRatings(params.userId);
     return apiSuccess(data);

@@ -9,24 +9,27 @@ const copy = {
   en: { title: "Login" },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].title,
     robots: { index: false, follow: false },
   };
 }
 
-export default function LoginPage({
-  params: { locale },
-  searchParams,
+export default async function LoginPage({
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams: { callbackUrl?: string | string[] };
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const callbackUrl =
     typeof searchParams.callbackUrl === "string"
       ? searchParams.callbackUrl

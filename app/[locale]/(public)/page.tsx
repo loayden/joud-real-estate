@@ -195,11 +195,12 @@ function getCategoryName(
   return locale === "ar" ? category.nameAr : category.nameEn;
 }
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "جود العقارية" : "Joud Real Estate";
   const description = isArabic
@@ -239,10 +240,11 @@ export function generateMetadata({
 }
 
 export default async function HomePage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
   const [site, data, session, heroImages] = await Promise.all([
     getTranslations("site"),

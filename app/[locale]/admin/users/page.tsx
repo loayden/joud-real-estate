@@ -65,11 +65,12 @@ const copy = {
   },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].pageTitle,
   };
@@ -98,17 +99,19 @@ function buildUrl({
 }
 
 export default async function AdminUsersPage({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams?: {
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{
     search?: string;
     role?: string;
     status?: string;
     page?: string;
-  };
+  }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const session = await requireRole(["ADMIN", "SUPER_ADMIN"]);
   const text = copy[locale];
   const search = searchParams?.search?.trim() ?? "";

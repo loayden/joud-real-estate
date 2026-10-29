@@ -228,12 +228,14 @@ async function getFilterLookups(): Promise<SearchFilterLookups> {
 }
 
 export async function generateMetadata({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const isArabic = locale === "ar";
   const title = isArabic ? "البحث عن العقارات" : "Search Properties";
   const description = describeSearch(locale, searchParams);
@@ -289,12 +291,14 @@ export async function generateMetadata({
 }
 
 export default async function SearchPage({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const text = copy[locale];
   const normalizedParams = normalizeSearchParams({
     ...searchParams,

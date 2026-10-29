@@ -78,21 +78,23 @@ function formatDate(date: Date, locale: Locale) {
 // User-specific page: must never be prerendered at build time.
 export const dynamic = "force-dynamic";
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].title,
   };
 }
 
 export default async function MyListingsPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const session = await auth();
 
   if (!session?.user?.id) {

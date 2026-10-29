@@ -8,8 +8,9 @@ export const runtime = "nodejs";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { propertyId: string } },
+  { params: paramsPromise }: { params: Promise<{ propertyId: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const data = await getApprovedPropertyRatings(params.propertyId);
     return apiSuccess(data);

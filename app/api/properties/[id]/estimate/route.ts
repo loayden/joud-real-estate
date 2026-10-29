@@ -13,8 +13,9 @@ export const runtime = "nodejs";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const identifier = getRateLimitIdentifier(req);
     await rateLimit(searchRateLimit, `estimate:${identifier}`);

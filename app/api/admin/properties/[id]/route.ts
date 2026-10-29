@@ -39,8 +39,9 @@ function decimalToNumber(value: unknown) {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     await requireRole(["ADMIN", "SUPER_ADMIN"]);
     const property = await getAdminPropertyForReview(params.id);
@@ -57,8 +58,9 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const session = await requireRole(["ADMIN", "SUPER_ADMIN"]);
     const existing = await findPropertyForAccess(params.id);
@@ -178,8 +180,9 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const session = await requireRole(["ADMIN", "SUPER_ADMIN"]);
     const property = await archiveProperty({

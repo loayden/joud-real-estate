@@ -90,11 +90,12 @@ function tabHref(
   return query ? `/properties?${query}` : "/properties";
 }
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "تصفح العقارات" : "Browse Properties";
   const description = isArabic
@@ -134,12 +135,14 @@ export function generateMetadata({
 }
 
 export default async function PropertiesPage({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const text = copy[locale];
   const page = parsePage(searchParams.page);
   const sort = getString(searchParams.sort) ?? "newest";

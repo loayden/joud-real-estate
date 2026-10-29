@@ -14,19 +14,21 @@ const copy = {
   en: { title: "Edit Property | Admin" },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale; id: string };
-}): Metadata {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return { title: copy[locale].title };
 }
 
 export default async function AdminEditPropertyPage({
-  params: { id },
+  params: paramsPromise,
 }: {
-  params: { id: string; locale: Locale };
+  params: Promise<{ id: string; locale: string }>;
 }) {
+  const { id } = await paramsPromise;
   const review = await getAdminPropertyForReview(id);
 
   if (!review) {

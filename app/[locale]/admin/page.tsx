@@ -111,10 +111,11 @@ function percent(value: number, total: number) {
 }
 
 export default async function AdminDashboardPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
   const stats = await getAdminStats();
   const statusRows = [

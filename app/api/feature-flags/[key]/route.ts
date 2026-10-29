@@ -8,8 +8,9 @@ export const runtime = "nodejs";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { key: string } },
+  { params: paramsPromise }: { params: Promise<{ key: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const key = normalizeFeatureFlagKey(params.key);
     const enabled = await isFeatureEnabled(key);

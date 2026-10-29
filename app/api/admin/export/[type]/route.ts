@@ -264,8 +264,9 @@ async function writeExport(
 
 export async function GET(
   _req: Request,
-  { params }: { params: { type: string } },
+  { params: paramsPromise }: { params: Promise<{ type: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     await requireRole(["ADMIN", "SUPER_ADMIN"]);
 

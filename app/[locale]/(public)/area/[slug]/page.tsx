@@ -194,10 +194,14 @@ async function getAreaData(slug: string): Promise<AreaData | null> {
 }
 
 export async function generateMetadata({
-  params: { locale, slug },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale; slug: string };
+  params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
+  const { locale, slug } = (await paramsPromise) as {
+    locale: Locale;
+    slug: string;
+  };
   const data = await getAreaData(slug);
   if (!data) return { title: "Area not found" };
 
@@ -253,10 +257,14 @@ function formatCurrency(value: number, locale: Locale) {
 }
 
 export default async function AreaDetailPage({
-  params: { locale, slug },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale; slug: string };
+  params: Promise<{ locale: string; slug: string }>;
 }) {
+  const { locale, slug } = (await paramsPromise) as {
+    locale: Locale;
+    slug: string;
+  };
   const text = copy[locale];
   const data = await getAreaData(slug);
 

@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Link, type Locale } from "@/i18n/routing";
 import { absoluteUrl, alternateLanguages, localizedUrl } from "@/lib/seo";
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "عن جود العقارية" : "About Joud Real Estate";
   const description = isArabic

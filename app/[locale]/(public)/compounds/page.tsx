@@ -90,10 +90,11 @@ const featuredCompounds = [
 ];
 
 export async function generateMetadata({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "الكمبوندات في مصر" : "Compounds in Egypt";
   const description = isArabic
@@ -131,10 +132,11 @@ export async function generateMetadata({
 }
 
 export default async function CompoundsPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
 
   return (

@@ -14,11 +14,12 @@ export function generateMetadata(): Metadata {
 
 export default async function DashboardLayout({
   children,
-  params: { locale },
+  params: paramsPromise,
 }: Readonly<{
   children: React.ReactNode;
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const session = await requireSession().catch(() => null);
 
   if (!session?.user?.id) {

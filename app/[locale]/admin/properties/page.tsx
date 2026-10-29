@@ -64,11 +64,12 @@ const statusTabs = [
   { label: "archived", status: "ARCHIVED" },
 ] as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].pageTitle,
   };
@@ -94,12 +95,14 @@ function buildUrl({
 }
 
 export default async function AdminPropertiesPage({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams?: { status?: string; search?: string; page?: string };
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ status?: string; search?: string; page?: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const text = copy[locale];
   const status = parsePropertyStatus(searchParams?.status);
   const search = searchParams?.search?.trim() ?? "";

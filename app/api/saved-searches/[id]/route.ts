@@ -9,8 +9,9 @@ export const runtime = "nodejs";
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const session = await requireSession();
     const result = await deleteSavedSearch(session.user.id, params.id);

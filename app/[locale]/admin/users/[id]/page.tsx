@@ -106,10 +106,14 @@ function localizeName(
 }
 
 export async function generateMetadata({
-  params: { id, locale },
+  params: paramsPromise,
 }: {
-  params: { id: string; locale: Locale };
+  params: Promise<{ id: string; locale: string }>;
 }): Promise<Metadata> {
+  const { id, locale } = (await paramsPromise) as {
+    id: string;
+    locale: Locale;
+  };
   const user = await getAdminUserDetail(id);
 
   return {
@@ -120,10 +124,14 @@ export async function generateMetadata({
 }
 
 export default async function AdminUserDetailPage({
-  params: { id, locale },
+  params: paramsPromise,
 }: {
-  params: { id: string; locale: Locale };
+  params: Promise<{ id: string; locale: string }>;
 }) {
+  const { id, locale } = (await paramsPromise) as {
+    id: string;
+    locale: Locale;
+  };
   const session = await requireRole(["ADMIN", "SUPER_ADMIN"]);
   const text = copy[locale];
   const user = await getAdminUserDetail(id);

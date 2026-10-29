@@ -16,23 +16,26 @@ const copy = {
   },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].pageTitle,
   };
 }
 
 export default async function AdminAnalyticsPage({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams?: { from?: string; to?: string };
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ from?: string; to?: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const initialData = await getAdminAnalyticsOverview({
     from: searchParams?.from,
     to: searchParams?.to,

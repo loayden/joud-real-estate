@@ -20,8 +20,9 @@ export const runtime = "nodejs";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const session = await requireSession();
     const limit = await checkRateLimit(

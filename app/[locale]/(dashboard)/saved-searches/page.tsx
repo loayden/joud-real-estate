@@ -77,11 +77,12 @@ type SavedSearchLookups = {
   types: Map<string, LookupItem>;
 };
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].pageTitle,
   };
@@ -231,10 +232,11 @@ function buildSummary(
 }
 
 export default async function SavedSearchesPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const session = await requireSession();
   const text = copy[locale];
   const [searches, lookups] = await Promise.all([

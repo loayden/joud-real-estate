@@ -31,11 +31,12 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "جود العقارية" : "Joud Real Estate";
   const description = isArabic
@@ -71,11 +72,12 @@ export function generateMetadata({
 
 export default async function LocaleLayout({
   children,
-  params: { locale },
+  params: paramsPromise,
 }: Readonly<{
   children: React.ReactNode;
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }>) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   if (!locales.includes(locale)) {
     notFound();
   }

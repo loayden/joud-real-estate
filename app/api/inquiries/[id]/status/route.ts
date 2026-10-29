@@ -9,8 +9,9 @@ export const runtime = "nodejs";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const session = await requireSession();
     const parsed = inquiryStatusSchema.safeParse(await req.json());

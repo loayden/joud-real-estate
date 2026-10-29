@@ -13,8 +13,9 @@ export const runtime = "nodejs";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { template: string } },
+  { params: paramsPromise }: { params: Promise<{ template: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     await requireRole(["ADMIN", "SUPER_ADMIN"]);
 

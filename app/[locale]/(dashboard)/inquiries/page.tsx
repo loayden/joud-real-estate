@@ -58,11 +58,12 @@ const statusTabs: Array<{
   { label: "closed", status: "CLOSED" },
 ];
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].pageTitle,
   };
@@ -76,12 +77,14 @@ function buildHref(status?: InquiryStatus) {
 }
 
 export default async function InquiriesPage({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams?: { status?: string; tab?: string };
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ status?: string; tab?: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const session = await requireSession();
   const text = copy[locale];
   const status = parseInquiryStatus(searchParams?.status);

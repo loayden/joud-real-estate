@@ -147,10 +147,14 @@ async function getSimilarProperties(property: {
 }
 
 export async function generateMetadata({
-  params: { locale, slug },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale; slug: string };
+  params: Promise<{ locale: string; slug: string }>;
 }): Promise<Metadata> {
+  const { locale, slug } = (await paramsPromise) as {
+    locale: Locale;
+    slug: string;
+  };
   const property = await getProperty(slug);
 
   if (!property) {
@@ -199,10 +203,14 @@ export async function generateMetadata({
 }
 
 export default async function PropertyDetailPage({
-  params: { locale, slug },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale; slug: string };
+  params: Promise<{ locale: string; slug: string }>;
 }) {
+  const { locale, slug } = (await paramsPromise) as {
+    locale: Locale;
+    slug: string;
+  };
   const property = await getProperty(slug);
 
   if (!property) {

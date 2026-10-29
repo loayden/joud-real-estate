@@ -7,8 +7,9 @@ export const runtime = "nodejs";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { slug: string } },
+  { params: paramsPromise }: { params: Promise<{ slug: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const cities = await getCached(
       `cities:${params.slug}`,

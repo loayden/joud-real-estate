@@ -19,8 +19,9 @@ function requestIp(req: NextRequest) {
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params: paramsPromise }: { params: Promise<{ id: string }> },
 ) {
+  const params = await paramsPromise;
   try {
     const session = await requireRole(["SUPER_ADMIN"]);
     const parsed = roleSchema.safeParse(await req.json());

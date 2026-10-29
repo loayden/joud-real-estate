@@ -5,11 +5,12 @@ import { getTranslations } from "next-intl/server";
 import { type Locale } from "@/i18n/routing";
 import { absoluteUrl, alternateLanguages, localizedUrl } from "@/lib/seo";
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "تواصل معنا" : "Contact Us";
   const description = isArabic

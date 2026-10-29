@@ -28,10 +28,11 @@ const copy = {
 } as const;
 
 export async function generateMetadata({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "حاسبة التمويل العقاري" : "Mortgage Calculator";
   const description = isArabic
@@ -69,10 +70,11 @@ export async function generateMetadata({
 }
 
 export default async function MortgagePage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
 
   return (

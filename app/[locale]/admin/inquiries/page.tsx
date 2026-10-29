@@ -62,11 +62,12 @@ const statusTabs: Array<{
   { label: "closed", status: "CLOSED" },
 ];
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
-}): Metadata {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return {
     title: copy[locale].pageTitle,
   };
@@ -97,12 +98,14 @@ function parsePage(value: string | undefined) {
 }
 
 export default async function AdminInquiriesPage({
-  params: { locale },
-  searchParams,
+  params: paramsPromise,
+  searchParams: searchParamsPromise,
 }: {
-  params: { locale: Locale };
-  searchParams?: { status?: string; search?: string; page?: string };
+  params: Promise<{ locale: string }>;
+  searchParams?: Promise<{ status?: string; search?: string; page?: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
+  const searchParams = await searchParamsPromise;
   const text = copy[locale];
   const status = parseInquiryStatus(searchParams?.status);
   const searchValue = searchParams?.search?.trim() ?? "";

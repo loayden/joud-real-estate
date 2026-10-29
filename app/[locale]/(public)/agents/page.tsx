@@ -65,10 +65,11 @@ async function getAgents() {
 }
 
 export async function generateMetadata({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "الوسطاء العقاريون" : "Real Estate Agents";
   const description = isArabic
@@ -113,10 +114,11 @@ function formatScore(score: number | null, locale: Locale) {
 }
 
 export default async function AgentsPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
   const agents = await getAgents();
 

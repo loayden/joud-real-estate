@@ -99,10 +99,11 @@ const topDevelopers = [
 ];
 
 export async function generateMetadata({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const isArabic = locale === "ar";
   const title = isArabic ? "المطورون العقاريون" : "Real Estate Developers";
   const description = isArabic
@@ -143,10 +144,11 @@ export async function generateMetadata({
 }
 
 export default async function DevelopersPage({
-  params: { locale },
+  params: paramsPromise,
 }: {
-  params: { locale: Locale };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   const text = copy[locale];
 
   return (

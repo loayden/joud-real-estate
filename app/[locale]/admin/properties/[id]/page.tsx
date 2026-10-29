@@ -95,10 +95,14 @@ function personName(person: {
 }
 
 export async function generateMetadata({
-  params: { id, locale },
+  params: paramsPromise,
 }: {
-  params: { id: string; locale: Locale };
+  params: Promise<{ id: string; locale: string }>;
 }): Promise<Metadata> {
+  const { id, locale } = (await paramsPromise) as {
+    id: string;
+    locale: Locale;
+  };
   const review = await getAdminPropertyForReview(id);
 
   return {
@@ -109,10 +113,14 @@ export async function generateMetadata({
 }
 
 export default async function AdminPropertyReviewPage({
-  params: { id, locale },
+  params: paramsPromise,
 }: {
-  params: { id: string; locale: Locale };
+  params: Promise<{ id: string; locale: string }>;
 }) {
+  const { id, locale } = (await paramsPromise) as {
+    id: string;
+    locale: Locale;
+  };
   const text = copy[locale];
   const review = await getAdminPropertyForReview(id);
 

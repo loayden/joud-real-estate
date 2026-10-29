@@ -17,19 +17,24 @@ const copy = {
   en: { title: "Edit Property" },
 } as const;
 
-export function generateMetadata({
-  params: { locale },
+export async function generateMetadata({
+  params: paramsPromise,
 }: {
-  params: { locale: Locale; id: string };
-}): Metadata {
+  params: Promise<{ locale: string; id: string }>;
+}): Promise<Metadata> {
+  const { locale } = (await paramsPromise) as { locale: Locale };
   return { title: copy[locale].title };
 }
 
 export default async function EditPropertyPage({
-  params: { id, locale },
+  params: paramsPromise,
 }: {
-  params: { id: string; locale: Locale };
+  params: Promise<{ id: string; locale: string }>;
 }) {
+  const { id, locale } = (await paramsPromise) as {
+    id: string;
+    locale: Locale;
+  };
   const session = await auth();
 
   if (!session?.user?.id) {
